@@ -50,7 +50,7 @@
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">{{ $order->created_at->format('H:i') }}</span>
-                            <span class="font-bold text-gray-800">${{ number_format($order->total, 2) }}</span>
+                            <span class="font-bold text-gray-800">Rs. {{ number_format($order->total, 2) }}</span>
                         </div>
                     </div>
                     <div class="px-4 pb-4 flex gap-2">

@@ -11,6 +11,19 @@
             These values are used when calculating service charge and tax for orders.
         </p>
 
+        <div class="mb-5 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-amber-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-amber-700 font-medium">
+                        Feature Disabled: Tax and Service Charges are currently bypassed in the billing engine. Values saved here will be stored but not applied to totals.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-4">
             @csrf
 

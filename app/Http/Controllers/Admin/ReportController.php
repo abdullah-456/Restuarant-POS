@@ -40,5 +40,21 @@ class ReportController extends Controller
             'topSellingItems' => $topSellingItems,
         ]);
     }
+
+    public function exportExcel()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\OrdersExport, 'daily_sales_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function exportPDF()
+    {
+        $date = date('Y-m-d');
+        $orders = Order::with(['table', 'waiter'])
+            ->whereDate('created_at', $date)
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf', compact('orders', 'date'));
+        return $pdf->download('daily_sales_' . $date . '.pdf');
+    }
 }
 

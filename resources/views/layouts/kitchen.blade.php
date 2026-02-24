@@ -69,44 +69,15 @@
             </div>
         </div>
         <div class="p-4 md:p-6">
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-3 md:p-4 rounded shadow-sm">
-                    <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><p class="text-sm md:text-base">{{ session('success') }}</p></div>
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 md:p-4 rounded shadow-sm">
-                    <div class="flex items-center"><i class="fas fa-exclamation-circle mr-2"></i><p class="text-sm md:text-base">{{ session('error') }}</p></div>
-                </div>
-            @endif
             @yield('content')
         </div>
     </div>
 
-    {{-- Professional Confirm Modal --}}
-    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
-            <div class="p-6">
-                <div class="flex items-center mb-3">
-                    <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                    </div>
-                    <h3 class="ml-4 text-lg font-bold text-gray-900" id="confirmTitle">Confirm Action</h3>
-                </div>
-                <p class="text-gray-600 mb-6 text-sm" id="confirmMessage">Are you sure?</p>
-                <div class="flex gap-3">
-                    <button type="button" id="confirmCancel"
-                            class="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">Cancel</button>
-                    <button type="button" id="confirmOk"
-                            class="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-bold transition">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    @stack('scripts')
     <script>
         $(document).ready(function() {
+            // Sidebar toggles
             $('#sidebar-toggle-desktop').on('click', function() {
                 $('#sidebar').toggleClass('collapsed');
                 if ($('#sidebar').hasClass('collapsed')) {
@@ -129,18 +100,25 @@
                     $('#sidebar-overlay').addClass('hidden');
                 }
             });
+
+            // Session Messages
+            @if(session('success'))
+                window.Alert.toast("{{ session('success') }}", 'success');
+            @endif
+            @if(session('error'))
+                window.Alert.toast("{{ session('error') }}", 'error');
+            @endif
+            @if(session('info'))
+                window.Alert.toast("{{ session('info') }}", 'info');
+            @endif
         });
 
+        // Global showConfirm using SweetAlert
         window.showConfirm = function(title, message, callback) {
-            $('#confirmTitle').text(title);
-            $('#confirmMessage').text(message);
-            $('#confirmModal').removeClass('hidden');
-            $('#confirmOk').off('click').on('click', function() {
-                $('#confirmModal').addClass('hidden');
-                if (callback) callback();
-            });
-            $('#confirmCancel').off('click').on('click', function() {
-                $('#confirmModal').addClass('hidden');
+            window.Alert.confirm(title, message).then((result) => {
+                if (result.isConfirmed && callback) {
+                    callback();
+                }
             });
         };
     </script>

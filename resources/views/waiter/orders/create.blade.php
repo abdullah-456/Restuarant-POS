@@ -63,7 +63,7 @@
                                 @endif
                                 <div class="flex-1 min-w-0">
                                     <p class="font-medium text-gray-800 text-base truncate">{{ $item->name }}</p> {{-- Larger text --}}
-                                    <p class="text-blue-600 font-bold text-base">${{ number_format($item->price, 2) }}</p> {{-- Larger text --}}
+                                    <p class="text-blue-600 font-bold text-base">Rs. {{ number_format($item->price, 2) }}</p> {{-- Larger text --}}
                                 </div>
                                 <div class="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-600 flex items-center justify-center transition flex-shrink-0">
                                     <i class="fas fa-plus text-blue-400 group-hover:text-white text-sm transition"></i> {{-- Larger icon --}}
@@ -133,7 +133,7 @@
             <div class="px-5 py-4 space-y-2 text-base">
                 <div class="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span id="subtotalDisplay" class="font-medium">$0.00</span>
+                    <span id="subtotalDisplay" class="font-medium">Rs. 0.00</span>
                 </div>
                 @php
                 $servicePercent = \App\Models\Setting::get('service_charge_percent', 0);
@@ -142,18 +142,18 @@
                 @if($servicePercent > 0)
                 <div class="flex justify-between text-gray-600">
                     <span>Service ({{ $servicePercent }}%)</span>
-                    <span id="serviceDisplay" class="font-medium">$0.00</span>
+                    <span id="serviceDisplay" class="font-medium">Rs. 0.00</span>
                 </div>
                 @endif
                 @if($taxPercent > 0)
                 <div class="flex justify-between text-gray-600">
                     <span>Tax ({{ $taxPercent }}%)</span>
-                    <span id="taxDisplay" class="font-medium">$0.00</span>
+                    <span id="taxDisplay" class="font-medium">Rs. 0.00</span>
                 </div>
                 @endif
                 <div class="flex justify-between font-bold text-xl border-t border-gray-200 pt-3 mt-3 text-gray-900">
                     <span>Total</span>
-                    <span id="totalDisplay">$0.00</span>
+                    <span id="totalDisplay">Rs. 0.00</span>
                 </div>
             </div>
 
@@ -294,7 +294,7 @@
             <div class="flex items-center gap-2 py-3 border-b border-gray-50 last:border-0 w-full">
                 <div class="flex-1 min-w-0 max-w-[160px]">
                     <p class="text-base font-medium text-gray-800 truncate" title="${item.name}">${item.name}</p>
-                    <p class="text-sm text-blue-600">$${item.price.toFixed(2)} each</p>
+                    <p class="text-sm text-blue-600">Rs. ${item.price.toFixed(2)} each</p>
                     <input type="hidden" name="items[${idx}][menu_item_id]" value="${id}">
                     <input type="hidden" name="items[${idx}][quantity]" value="${item.qty}">
                     <input type="hidden" name="items[${idx}][notes]" value="">
@@ -310,7 +310,7 @@
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
-                <div class="text-base font-semibold text-gray-800 flex-shrink-0 w-20 text-right">$${lineTotal.toFixed(2)}</div>
+                <div class="text-base font-semibold text-gray-800 flex-shrink-0 w-20 text-right">Rs. ${lineTotal.toFixed(2)}</div>
             </div>
         `;
     });
@@ -325,15 +325,15 @@
         const tax = (subtotal + service) * TAX_PERCENT / 100;
         const total = subtotal + service + tax;
         
-        document.getElementById('subtotalDisplay').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('subtotalDisplay').textContent = 'Rs. ' + subtotal.toFixed(2);
         
         const serviceDisplay = document.getElementById('serviceDisplay');
-        if (serviceDisplay) serviceDisplay.textContent = '$' + service.toFixed(2);
+        if (serviceDisplay) serviceDisplay.textContent = 'Rs. ' + service.toFixed(2);
         
         const taxDisplay = document.getElementById('taxDisplay');
-        if (taxDisplay) taxDisplay.textContent = '$' + tax.toFixed(2);
+        if (taxDisplay) taxDisplay.textContent = 'Rs. ' + tax.toFixed(2);
         
-        document.getElementById('totalDisplay').textContent = '$' + total.toFixed(2);
+        document.getElementById('totalDisplay').textContent = 'Rs. ' + total.toFixed(2);
     }
 
     // Menu search functionality

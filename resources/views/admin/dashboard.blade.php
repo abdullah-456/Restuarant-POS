@@ -11,10 +11,10 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-blue-100 text-xs md:text-sm font-medium">Total Sales Today</p>
-                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">${{ number_format($stats['total_sales_today'], 2) }}</p>
+                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">Rs. {{ number_format($stats['total_sales_today'], 2) }}</p>
                     </div>
                     <div class="bg-blue-400 bg-opacity-30 rounded-full p-2 md:p-3">
-                        <i class="fas fa-dollar-sign text-xl md:text-2xl"></i>
+                        <i class="fas fa-money-bill-wave text-xl md:text-2xl"></i>
                     </div>
                 </div>
             </div>
@@ -142,7 +142,7 @@ if (revenueData && revenueData.length > 0) {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toFixed(0);
+                            return 'Rs. ' + value.toFixed(0);
                         }
                     }
                 }

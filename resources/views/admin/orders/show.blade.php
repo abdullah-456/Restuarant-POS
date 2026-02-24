@@ -32,7 +32,7 @@
                     @foreach($order->items as $item)
                         <div class="flex justify-between">
                             <span>{{ $item->quantity }}x {{ $item->item_name }}</span>
-                            <span>${{ number_format($item->subtotal, 2) }}</span>
+                            <span>Rs. {{ number_format($item->subtotal, 2) }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -41,29 +41,29 @@
             <div class="border-t border-gray-200 pt-4 mt-4 space-y-2 text-sm">
                 <div class="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>${{ number_format($order->subtotal, 2) }}</span>
+                    <span>Rs. {{ number_format($order->subtotal, 2) }}</span>
                 </div>
                 @if($order->discount_amount > 0)
                     <div class="flex justify-between text-red-600">
                         <span>Discount:</span>
-                        <span>-${{ number_format($order->discount_amount, 2) }}</span>
+                        <span>-Rs. {{ number_format($order->discount_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->service_charge_amount > 0)
                     <div class="flex justify-between">
                         <span>Service Charge:</span>
-                        <span>${{ number_format($order->service_charge_amount, 2) }}</span>
+                        <span>Rs. {{ number_format($order->service_charge_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->tax_amount > 0)
                     <div class="flex justify-between">
                         <span>Tax:</span>
-                        <span>${{ number_format($order->tax_amount, 2) }}</span>
+                        <span>Rs. {{ number_format($order->tax_amount, 2) }}</span>
                     </div>
                 @endif
                 <div class="flex justify-between font-bold text-lg border-t border-gray-200 pt-2 mt-2">
                     <span>Total:</span>
-                    <span>${{ number_format($order->total, 2) }}</span>
+                    <span>Rs. {{ number_format($order->total, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -78,7 +78,7 @@
                             <p class="font-medium">{{ ucfirst($payment->payment_method) }}</p>
                             <p class="text-xs text-gray-500">{{ $payment->paid_at?->format('Y-m-d H:i') }}</p>
                         </div>
-                        <span class="font-semibold">${{ number_format($payment->amount, 2) }}</span>
+                        <span class="font-semibold">Rs. {{ number_format($payment->amount, 2) }}</span>
                     </div>
                 @empty
                     <p class="text-gray-500">No payments recorded.</p>
@@ -88,11 +88,11 @@
             <div class="border-t border-gray-200 pt-4 mt-4 space-y-2 text-sm">
                 <div class="flex justify-between">
                     <span>Total Paid:</span>
-                    <span>${{ number_format($order->total_paid, 2) }}</span>
+                    <span>Rs. {{ number_format($order->total_paid, 2) }}</span>
                 </div>
                 <div class="flex justify-between font-bold text-lg border-t border-gray-200 pt-2 mt-2">
                     <span>Remaining:</span>
-                    <span>${{ number_format($order->remaining_amount, 2) }}</span>
+                    <span>Rs. {{ number_format($order->remaining_amount, 2) }}</span>
                 </div>
             </div>
         </div>

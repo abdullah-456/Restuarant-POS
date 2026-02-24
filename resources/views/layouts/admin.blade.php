@@ -118,52 +118,17 @@
             </div>
         </div>
         <div class="p-4 md:p-6">
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-3 md:p-4 rounded shadow-sm">
-                    <div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><p class="text-sm md:text-base">{{ session('success') }}</p></div>
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 md:p-4 rounded shadow-sm">
-                    <div class="flex items-center"><i class="fas fa-exclamation-circle mr-2"></i><p class="text-sm md:text-base">{{ session('error') }}</p></div>
-                </div>
-            @endif
             @yield('content')
-        </div>
-    </div>
-
-    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div class="p-6">
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                    </div>
-                    <h3 class="ml-4 text-lg font-semibold text-gray-900" id="confirmTitle">Confirm Action</h3>
-                </div>
-                <p class="text-gray-600 mb-6" id="confirmMessage">Are you sure you want to perform this action?</p>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" id="confirmCancel" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button type="button" id="confirmOk" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed top-4 right-4 hidden z-50">
-        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 min-w-80">
-            <div class="flex items-center">
-                <i id="toastIcon" class="fas fa-info-circle mr-3 text-blue-500"></i>
-                <p id="toastMessage" class="text-gray-800"></p>
-            </div>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @stack('scripts')
     <script>
         $(document).ready(function() {
+            // Sidebar toggles
             $('#sidebar-toggle-desktop').on('click', function() {
                 $('#sidebar').toggleClass('collapsed');
                 if ($('#sidebar').hasClass('collapsed')) {
@@ -186,42 +151,31 @@
                     $('#sidebar-overlay').addClass('hidden');
                 }
             });
+
+            // Session Messages
+            @if(session('success'))
+                window.Alert.toast("{{ session('success') }}", 'success');
+            @endif
+            @if(session('error'))
+                window.Alert.toast("{{ session('error') }}", 'error');
+            @endif
+            @if(session('info'))
+                window.Alert.toast("{{ session('info') }}", 'info');
+            @endif
         });
 
+        // Global showConfirm using SweetAlert
         window.showConfirm = function(title, message, callback) {
-            $('#confirmTitle').text(title);
-            $('#confirmMessage').text(message);
-            $('#confirmModal').removeClass('hidden');
-            $('#confirmOk').off('click').on('click', function() {
-                $('#confirmModal').addClass('hidden');
-                if (callback) callback();
-            });
-            $('#confirmCancel').off('click').on('click', function() {
-                $('#confirmModal').addClass('hidden');
+            window.Alert.confirm(title, message).then((result) => {
+                if (result.isConfirmed && callback) {
+                    callback();
+                }
             });
         };
 
+        // Standardized Toast
         window.showToast = function(message, type = 'success') {
-            const toast = $('#toast');
-            const icon = $('#toastIcon');
-            const messageEl = $('#toastMessage');
-            messageEl.text(message);
-            toast.find('.border-l-4').removeClass('border-green-500 border-red-500 border-blue-500');
-            icon.removeClass('fa-check-circle fa-exclamation-circle fa-info-circle text-green-500 text-red-500 text-blue-500');
-            if (type === 'success') {
-                icon.addClass('fas fa-check-circle mr-3 text-green-500');
-                toast.find('.border-l-4').addClass('border-green-500');
-            } else if (type === 'error') {
-                icon.addClass('fas fa-exclamation-circle mr-3 text-red-500');
-                toast.find('.border-l-4').addClass('border-red-500');
-            } else {
-                icon.addClass('fas fa-info-circle mr-3 text-blue-500');
-                toast.find('.border-l-4').addClass('border-blue-500');
-            }
-            toast.removeClass('hidden');
-            setTimeout(function() {
-                toast.addClass('hidden');
-            }, 3000);
+            window.Alert.toast(message, type);
         };
     </script>
     @stack('scripts')

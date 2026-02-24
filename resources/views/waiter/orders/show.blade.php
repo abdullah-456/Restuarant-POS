@@ -86,8 +86,8 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-2.5 text-center text-gray-700">{{ $item->quantity }}</td>
-                                    <td class="px-3 py-2.5 text-right text-gray-600">${{ number_format($item->item_price, 2) }}</td>
-                                    <td class="px-3 py-2.5 text-right font-medium text-gray-800">${{ number_format($item->subtotal, 2) }}</td>
+                                    <td class="px-3 py-2.5 text-right text-gray-600">Rs. {{ number_format($item->item_price, 2) }}</td>
+                                    <td class="px-3 py-2.5 text-right font-medium text-gray-800">Rs. {{ number_format($item->subtotal, 2) }}</td>
                                 </tr>
                             @empty
                                 @if($newItems->count() === 0)
@@ -146,8 +146,8 @@
                                             @endif
                                         </td>
                                         <td class="px-3 py-2.5 text-center text-gray-700 font-semibold">{{ $item->quantity }}</td>
-                                        <td class="px-3 py-2.5 text-right text-gray-600">${{ number_format($item->item_price, 2) }}</td>
-                                        <td class="px-3 py-2.5 text-right font-bold text-gray-900">${{ number_format($item->subtotal, 2) }}</td>
+                                        <td class="px-3 py-2.5 text-right text-gray-600">Rs. {{ number_format($item->item_price, 2) }}</td>
+                                        <td class="px-3 py-2.5 text-right font-bold text-gray-900">Rs. {{ number_format($item->subtotal, 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -170,23 +170,23 @@
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between text-gray-600">
                         <span>Subtotal</span>
-                        <span>${{ number_format($order->subtotal, 2) }}</span>
+                        <span>Rs. {{ number_format($order->subtotal, 2) }}</span>
                     </div>
                     @if($order->service_charge_amount > 0)
                         <div class="flex justify-between text-gray-600">
                             <span>Service Charge</span>
-                            <span>${{ number_format($order->service_charge_amount, 2) }}</span>
+                            <span>Rs. {{ number_format($order->service_charge_amount, 2) }}</span>
                         </div>
                     @endif
                     @if($order->tax_amount > 0)
                         <div class="flex justify-between text-gray-600">
                             <span>Tax</span>
-                            <span>${{ number_format($order->tax_amount, 2) }}</span>
+                            <span>Rs. {{ number_format($order->tax_amount, 2) }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between font-bold text-base text-gray-900 border-t border-gray-200 pt-2 mt-2">
                         <span>Total</span>
-                        <span>${{ number_format($order->total, 2) }}</span>
+                        <span>Rs. {{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -295,7 +295,7 @@
 
                                             <div class="flex-1 min-w-0">
                                                 <p class="font-medium text-gray-800 text-base truncate">{{ $item->name }}</p>
-                                                <p class="text-blue-600 font-bold text-base">${{ number_format($item->price, 2) }}</p>
+                                                <p class="text-blue-600 font-bold text-base">Rs. {{ number_format($item->price, 2) }}</p>
                                             </div>
 
                                             <div class="w-9 h-9 rounded-full bg-blue-50 group-hover:bg-blue-600 flex items-center justify-center transition flex-shrink-0">
@@ -330,7 +330,7 @@
                                 </div>
                                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
                                     <p class="text-xs text-gray-500">Subtotal</p>
-                                    <p class="text-xl font-extrabold text-gray-900" id="selectedSubtotal">$0.00</p>
+                                    <p class="text-xl font-extrabold text-gray-900" id="selectedSubtotal">Rs. 0.00</p>
                                 </div>
                             </div>
                         </div>
@@ -383,8 +383,6 @@
 
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 // Global variables
 let selectedItems = {}; // { id: { name, price, qty, notes } }
@@ -440,16 +438,7 @@ window.removeSelectedItem = function(id) {
 window.clearSelectedItems = function() {
     if (Object.keys(selectedItems).length === 0) return;
     
-    Swal.fire({
-        title: 'Clear selected items?',
-        text: 'This will remove all selected items.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, clear',
-        cancelButtonText: 'No',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6b7280'
-    }).then((result) => {
+    window.Alert.confirm('Clear selected items?', 'This will remove all selected items.').then((result) => {
         if (result.isConfirmed) {
             selectedItems = {};
             renderSelectedItems();
@@ -498,7 +487,7 @@ function renderSelectedItems() {
                 <div class="flex justify-between items-start gap-3">
                     <div class="min-w-0">
                         <h5 class="font-semibold text-gray-900 truncate">${escapeHtml(item.name)}</h5>
-                        <p class="text-sm text-blue-600 font-semibold">$${Number(item.price).toFixed(2)} each</p>
+                        <p class="text-sm text-blue-600 font-semibold">Rs. ${Number(item.price).toFixed(2)} each</p>
                     </div>
                     <button type="button" onclick="removeSelectedItem(${id})"
                             class="w-8 h-8 rounded-full hover:bg-red-50 text-red-600 flex items-center justify-center">
@@ -523,7 +512,7 @@ function renderSelectedItems() {
 
                     <div class="text-right">
                         <p class="text-xs text-gray-500">Line Total</p>
-                        <p class="font-bold text-gray-900">$${lineTotal.toFixed(2)}</p>
+                        <p class="font-bold text-gray-900">Rs. ${lineTotal.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -541,7 +530,7 @@ function renderSelectedItems() {
 
     container.innerHTML = html;
     totalItemsSpan.textContent = totalItems;
-    subtotalSpan.textContent = '$' + subtotal.toFixed(2);
+    subtotalSpan.textContent = 'Rs. ' + subtotal.toFixed(2);
 }
 
 window.confirmAllItems = function() {
@@ -581,22 +570,12 @@ window.confirmAllItems = function() {
         .then(() => {
             selectedItems = {};
             closeAddItemModal();
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Items added successfully.',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
+            window.Alert.success('Items added successfully.').then(() => {
                 window.location.reload();
             });
         })
         .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Network error, please try again.'
-            });
+            window.Alert.error(error.message || 'Network error, please try again.');
         })
         .finally(() => {
             btn.innerHTML = originalText;
@@ -615,16 +594,7 @@ document.getElementById('modalMenuSearch')?.addEventListener('input', function()
 
 // Cancel order confirmation
 window.confirmCancel = function(url) {
-    Swal.fire({
-        title: 'Cancel this order?',
-        text: 'This will mark the order as cancelled.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, cancel it',
-        cancelButtonText: 'No',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6b7280'
-    }).then((result) => {
+    window.Alert.confirm('Cancel this order?', 'This will mark the order as cancelled.').then((result) => {
         if (result.isConfirmed) {
             const form = document.getElementById('cancelOrderForm');
             form.action = url;

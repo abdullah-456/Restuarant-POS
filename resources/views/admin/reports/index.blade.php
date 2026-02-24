@@ -4,12 +4,23 @@
 @section('page-title', 'Reports')
 
 @section('content')
+<div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
+    <h2 class="text-xl font-bold text-gray-800">Daily Sales Insights</h2>
+    <div class="flex gap-2">
+        <a href="{{ route('admin.reports.export.excel') }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 text-sm font-semibold shadow-sm">
+            <i class="fas fa-file-excel"></i> Export Excel
+        </a>
+        <a href="{{ route('admin.reports.export.pdf') }}" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 text-sm font-semibold shadow-sm">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+    </div>
+</div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
     <div class="lg:col-span-2 space-y-4 md:space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
             <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-4 md:p-6 text-white">
                 <p class="text-blue-100 text-xs md:text-sm font-medium">Total Sales Today</p>
-                <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">${{ number_format($stats['total_sales_today'], 2) }}</p>
+                <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">Rs. {{ number_format($stats['total_sales_today'], 2) }}</p>
             </div>
             <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-4 md:p-6 text-white">
                 <p class="text-green-100 text-xs md:text-sm font-medium">Total Orders Today</p>
@@ -50,7 +61,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 lg:sticky lg:top-24">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Summary</h2>
             <ul class="space-y-2 text-sm md:text-base text-gray-700">
-                <li>Total sales today: <strong>${{ number_format($stats['total_sales_today'], 2) }}</strong></li>
+                <li>Total sales today: <strong>Rs. {{ number_format($stats['total_sales_today'], 2) }}</strong></li>
                 <li>Total orders today: <strong>{{ $stats['total_orders_today'] }}</strong></li>
                 <li>Pending orders: <strong>{{ $stats['pending_orders'] }}</strong></li>
             </ul>
@@ -85,7 +96,7 @@ if (revenueData && revenueData.length > 0) {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toFixed(0);
+                            return 'Rs. ' + value.toFixed(0);
                         }
                     }
                 }

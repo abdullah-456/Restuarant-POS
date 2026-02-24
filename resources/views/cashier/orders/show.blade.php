@@ -44,8 +44,8 @@
                             <tr>
                                 <td class="px-3 py-2.5 text-gray-800">{{ $item->item_name }}</td>
                                 <td class="px-3 py-2.5 text-center text-gray-600">{{ $item->quantity }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-600">${{ number_format($item->item_price, 2) }}</td>
-                                <td class="px-3 py-2.5 text-right font-medium text-gray-800">${{ number_format($item->item_price * $item->quantity, 2) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-600">Rs. {{ number_format($item->item_price, 2) }}</td>
+                                <td class="px-3 py-2.5 text-right font-medium text-gray-800">Rs. {{ number_format($item->item_price * $item->quantity, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -56,29 +56,29 @@
             <div class="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
                 <div class="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span>${{ number_format($order->subtotal, 2) }}</span>
+                    <span>Rs. {{ number_format($order->subtotal, 2) }}</span>
                 </div>
                 @if($order->discount_amount > 0)
                     <div class="flex justify-between text-red-600">
                         <span>Discount</span>
-                        <span>-${{ number_format($order->discount_amount, 2) }}</span>
+                        <span>-Rs. {{ number_format($order->discount_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->service_charge_amount > 0)
                     <div class="flex justify-between text-gray-600">
                         <span>Service Charge</span>
-                        <span>${{ number_format($order->service_charge_amount, 2) }}</span>
+                        <span>Rs. {{ number_format($order->service_charge_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->tax_amount > 0)
                     <div class="flex justify-between text-gray-600">
                         <span>Tax</span>
-                        <span>${{ number_format($order->tax_amount, 2) }}</span>
+                        <span>Rs. {{ number_format($order->tax_amount, 2) }}</span>
                     </div>
                 @endif
                 <div class="flex justify-between font-bold text-xl text-gray-900 border-t border-gray-200 pt-2 mt-2">
                     <span>Amount Due</span>
-                    <span class="text-green-600">${{ number_format($order->total, 2) }}</span>
+                    <span class="text-green-600">Rs. {{ number_format($order->total, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -118,7 +118,7 @@
                         Amount Tendered <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">Rs.</span>
                         <input type="number" name="amount_tendered" id="amountTendered"
                                value="{{ old('amount_tendered', number_format($order->total, 2, '.', '')) }}"
                                min="{{ $order->total }}" step="0.01"
@@ -142,7 +142,7 @@
                     @foreach($suggestions as $s)
                         <button type="button" onclick="setAmount({{ $s }})"
                                 class="px-3 py-1.5 bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-blue-700 rounded-lg text-sm font-medium transition">
-                            ${{ number_format($s, 2) }}
+                            Rs. {{ number_format($s, 2) }}
                         </button>
                     @endforeach
                 </div>
@@ -151,7 +151,7 @@
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-5">
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-semibold text-green-700">Change Due</span>
-                        <span id="changeDue" class="text-2xl font-bold text-green-700">$0.00</span>
+                        <span id="changeDue" class="text-2xl font-bold text-green-700">Rs. 0.00</span>
                     </div>
                 </div>
 
@@ -179,7 +179,7 @@ const ORDER_TOTAL = {{ $order->total }};
 function calcChange() {
     const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
     const change = Math.max(0, tendered - ORDER_TOTAL);
-    document.getElementById('changeDue').textContent = '$' + change.toFixed(2);
+    document.getElementById('changeDue').textContent = 'Rs. ' + change.toFixed(2);
 }
 
 function setAmount(val) {

@@ -45,92 +45,107 @@ class OrderController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'restaurant_table_id' => ['required', 'exists:restaurant_tables,id'],
-            'items'               => ['required', 'array', 'min:1'],
-            'items.*.menu_item_id' => ['required', 'exists:menu_items,id'],
-            'items.*.quantity'     => ['required', 'integer', 'min:1'],
-            'items.*.notes'        => ['nullable', 'string', 'max:255'],
-            'notes'               => ['nullable', 'string'],
-        ]);
-    
-        // Check table is not already occupied with an active order
-        $tableId = $request->restaurant_table_id;
-        $existingActive = Order::where('restaurant_table_id', $tableId)
-            ->whereNotIn('status', ['paid', 'cancelled', 'completed'])
-            ->exists();
-    
-        if ($existingActive) {
-            return back()->withErrors(['restaurant_table_id' => 'This table already has an active order. Please choose a different table.'])->withInput();
-        }
-    
-        DB::transaction(function () use ($request) {
-            $subtotal = 0;
-            $orderItems = [];
-        
-            foreach ($request->items as $item) {
-                $menuItem = MenuItem::findOrFail($item['menu_item_id']);
-                $quantity  = (int) $item['quantity'];
-                $lineTotal = $menuItem->price * $quantity;
-                $subtotal += $lineTotal;
-        
-                $orderItems[] = [
-                    'menu_item_id' => $menuItem->id,
-                    'item_name'    => $menuItem->name,
-                    'item_price'   => $menuItem->price,
-                    'quantity'     => $quantity,
-                    'notes'        => $item['notes'] ?? null,
-                    'subtotal'     => $lineTotal,
-        
-                    // ✅ initial items are NOT new
-                    'is_new'       => 0,
-                    // ✅ immediately visible to kitchen
-                    'status'       => 'confirmed',
-                    'added_at'     => null,
-                ];
-            }
-        
-            $servicePercent = (float) Setting::get('service_charge_percent', 0);
-            $taxPercent     = (float) Setting::get('tax_percent', 0);
-        
-            $serviceAmount  = round($subtotal * $servicePercent / 100, 2);
-            $taxAmount      = round(($subtotal + $serviceAmount) * $taxPercent / 100, 2);
-            $total          = round($subtotal + $serviceAmount + $taxAmount, 2);
-        
-            $order = Order::create([
-                'order_number'           => 'ORD-' . strtoupper(uniqid()),
-                'restaurant_table_id'    => $request->restaurant_table_id,
-                'table_id'               => $request->restaurant_table_id,
-                'waiter_id'              => auth()->id(),
-        
-                // ✅ immediately goes to kitchen
-                'status'                 => 'confirmed',
-                'confirmed_at'           => now(),
-        
-                'notes'                  => $request->notes,
-                'subtotal'               => $subtotal,
-                'tax_rate'               => $taxPercent,
-                'tax_amount'             => $taxAmount,
-                'service_charge_rate'    => $servicePercent,
-                'service_charge_amount'  => $serviceAmount,
-                'discount_percentage'    => 0,
-                'discount_amount'        => 0,
-                'total'                  => $total,
-                'total_paid'             => 0,
-                'remaining_amount'       => $total,
-            ]);
-        
-            foreach ($orderItems as $itemData) {
-                $order->items()->create($itemData);
-            }
-        
-            // ✅ occupy table on create
-            $order->table()->update(['status' => 'occupied']);
-        });
-    
-        return redirect()->route('waiter.orders.index')->with('success', 'Order created successfully.');
+{
+    $request->validate([
+        'restaurant_table_id'   => ['required', 'exists:restaurant_tables,id'],
+        'items'                 => ['required', 'array', 'min:1'],
+        'items.*.menu_item_id'  => ['required', 'exists:menu_items,id'],
+        'items.*.quantity'      => ['required', 'integer', 'min:1'],
+        'items.*.notes'         => ['nullable', 'string', 'max:255'],
+        'notes'                 => ['nullable', 'string'],
+    ]);
+
+    $tableId = (int) $request->restaurant_table_id;
+
+    // Prevent multiple active orders on same table
+    $existingActive = Order::where('restaurant_table_id', $tableId)
+        ->whereNotIn('status', ['paid', 'cancelled', 'completed'])
+        ->exists();
+
+    if ($existingActive) {
+        return back()
+            ->withErrors(['restaurant_table_id' => 'This table already has an active order. Please choose a different table.'])
+            ->withInput();
     }
+
+    DB::transaction(function () use ($request, $tableId) {
+
+        // --- 1) Calculate subtotal from items ---
+        $subtotal = 0;
+        $orderItems = [];
+
+        foreach ($request->items as $item) {
+            $menuItem = MenuItem::findOrFail($item['menu_item_id']);
+            $quantity = (int) $item['quantity'];
+
+            $lineTotal = (float) $menuItem->price * $quantity;
+            $subtotal += $lineTotal;
+
+            $orderItems[] = [
+                'menu_item_id' => $menuItem->id,
+                'item_name'    => $menuItem->name,
+                'item_price'   => $menuItem->price,
+                'quantity'     => $quantity,
+                'notes'        => $item['notes'] ?? null,
+                'subtotal'     => $lineTotal,
+
+                // initial items are not new
+                'is_new'       => 0,
+                'status'       => 'confirmed',
+                'added_at'     => null,
+            ];
+        }
+
+        $subtotal = round($subtotal, 2);
+
+        // --- 2) Read tax/service % from settings (defaults to 0) ---
+        // Adjust keys if your settings table uses different names
+        $taxPercent = (float) (Setting::where('key', 'tax_percent')->value('value') ?? 0);
+        $servicePercent = (float) (Setting::where('key', 'service_charge_percent')->value('value') ?? 0);
+
+        // --- 3) Calculate amounts ---
+        $taxAmount = round(($subtotal * $taxPercent) / 100, 2);
+        $serviceAmount = round(($subtotal * $servicePercent) / 100, 2);
+
+        $total = round($subtotal + $taxAmount + $serviceAmount, 2);
+
+        // --- 4) Create order (Option A: ONLY restaurant_table_id) ---
+        $order = Order::create([
+            'order_number'          => 'ORD-' . strtoupper(uniqid()),
+            'restaurant_table_id'   => $tableId,
+            'waiter_id'             => auth()->id(),
+
+            'status'                => 'confirmed',
+            'confirmed_at'          => now(),
+
+            'notes'                 => $request->notes,
+            'subtotal'              => $subtotal,
+
+            'tax_rate'              => $taxPercent,
+            'tax_amount'            => $taxAmount,
+
+            'service_charge_rate'   => $servicePercent,
+            'service_charge_amount' => $serviceAmount,
+
+            'discount_percentage'   => 0,
+            'discount_amount'       => 0,
+
+            'total'                 => $total,
+            'total_paid'            => 0,
+            'remaining_amount'      => $total,
+        ]);
+
+        // --- 5) Create items ---
+        foreach ($orderItems as $itemData) {
+            $order->items()->create($itemData);
+        }
+
+        // --- 6) Occupy table ---
+        $order->table()->update(['status' => 'occupied']);
+    });
+
+    return redirect()->route('waiter.orders.index')->with('success', 'Order created successfully.');
+}
 
     public function show(Order $order)
     {
@@ -211,14 +226,9 @@ class OrderController extends Controller
         // Calculate new subtotal from all items
         $subtotal = $order->items()->sum('subtotal');
         
-        // Get rates from settings or order
-        $servicePercent = $order->service_charge_rate ?: (float) Setting::get('service_charge_percent', 0);
-        $taxPercent = $order->tax_rate ?: (float) Setting::get('tax_percent', 0);
-        
-        // Calculate charges
-        $serviceAmount = round($subtotal * $servicePercent / 100, 2);
-        $taxAmount = round(($subtotal + $serviceAmount) * $taxPercent / 100, 2);
-        $total = round($subtotal + $serviceAmount + $taxAmount, 2);
+        $serviceAmount = 0;
+        $taxAmount = 0;
+        $total = round($subtotal, 2);
         
         // Update order
         $order->update([
@@ -310,12 +320,9 @@ class OrderController extends Controller
     {
         $subtotal = $order->items()->sum(DB::raw('item_price * quantity'));
 
-        $servicePercent = (float) Setting::get('service_charge_percent', 0);
-        $taxPercent     = (float) Setting::get('tax_percent', 0);
-
-        $serviceAmount = round($subtotal * $servicePercent / 100, 2);
-        $taxAmount     = round(($subtotal + $serviceAmount) * $taxPercent / 100, 2);
-        $total         = round($subtotal + $serviceAmount + $taxAmount, 2);
+        $serviceAmount = 0;
+        $taxAmount     = 0;
+        $total         = round($subtotal, 2);
 
         $order->update([
             'subtotal'              => $subtotal,

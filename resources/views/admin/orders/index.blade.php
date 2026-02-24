@@ -52,7 +52,7 @@
                                 {{ ucfirst($order->status) }}
                             </span>
                         </td>
-                        <td class="px-3 md:px-4 py-2 md:py-3">${{ number_format($order->total, 2) }}</td>
+                        <td class="px-3 md:px-4 py-2 md:py-3">Rs. {{ number_format($order->total, 2) }}</td>
                         <td class="px-3 md:px-4 py-2 md:py-3 text-gray-600">{{ $order->created_at?->format('Y-m-d H:i') }}</td>
                         <td class="px-3 md:px-4 py-2 md:py-3 text-right">
                             <a href="{{ route('admin.orders.show', $order) }}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700">

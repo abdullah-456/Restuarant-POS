@@ -5,6 +5,17 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
+    <div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-800">Ready for Payment</h2>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.reports.export.excel') }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 text-sm font-semibold shadow-sm">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+            <a href="{{ route('admin.reports.export.pdf') }}" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 text-sm font-semibold shadow-sm">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
     <div id="orders-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <!-- Orders loaded via AJAX -->
     </div>
@@ -42,17 +53,17 @@
                 ${order.items.map(item => `
                     <div class="flex justify-between text-gray-700">
                         <span class="flex-1 min-w-0 truncate mr-2">${item.quantity}x ${item.item_name}</span>
-                        <span class="flex-shrink-0">$${(item.item_price * item.quantity).toFixed(2)}</span>
+                        <span class="flex-shrink-0">Rs. ${(item.item_price * item.quantity).toFixed(2)}</span>
                     </div>
                 `).join('')}
             </div>
             <div class="border-t border-gray-200 pt-2 md:pt-3 mb-3 md:mb-4 space-y-1 text-xs md:text-sm">
-                <div class="flex justify-between"><span class="text-gray-600">Subtotal:</span><span>$${parseFloat(order.subtotal).toFixed(2)}</span></div>
-                ${parseFloat(order.discount_amount) > 0 ? `<div class="flex justify-between text-red-600"><span>Discount:</span><span>-$${parseFloat(order.discount_amount).toFixed(2)}</span></div>` : ''}
-                ${parseFloat(order.service_charge_amount) > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Service:</span><span>$${parseFloat(order.service_charge_amount).toFixed(2)}</span></div>` : ''}
-                ${parseFloat(order.tax_amount) > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Tax:</span><span>$${parseFloat(order.tax_amount).toFixed(2)}</span></div>` : ''}
+                <div class="flex justify-between"><span class="text-gray-600">Subtotal:</span><span>Rs. ${parseFloat(order.subtotal).toFixed(2)}</span></div>
+                ${parseFloat(order.discount_amount) > 0 ? `<div class="flex justify-between text-red-600"><span>Discount:</span><span>-Rs. ${parseFloat(order.discount_amount).toFixed(2)}</span></div>` : ''}
+                ${parseFloat(order.service_charge_amount) > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Service:</span><span>Rs. ${parseFloat(order.service_charge_amount).toFixed(2)}</span></div>` : ''}
+                ${parseFloat(order.tax_amount) > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Tax:</span><span>Rs. ${parseFloat(order.tax_amount).toFixed(2)}</span></div>` : ''}
                 <div class="flex justify-between font-bold text-base md:text-lg border-t border-gray-200 pt-2 mt-2">
-                    <span>Total:</span><span>$${parseFloat(order.total).toFixed(2)}</span>
+                    <span>Total:</span><span>Rs. ${parseFloat(order.total).toFixed(2)}</span>
                 </div>
             </div>
             <a href="/cashier/orders/${order.id}" class="block w-full bg-green-600 text-white text-center px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-green-700 transition font-medium text-sm md:text-base">

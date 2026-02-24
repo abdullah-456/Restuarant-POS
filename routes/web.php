@@ -41,6 +41,8 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
+    Route::get('/reports/export/pdf', [ReportController::class, 'exportPDF'])->name('admin.reports.export.pdf');
 
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
