@@ -94,7 +94,6 @@
                 <span id="cartCount" class="ml-auto text-sm bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full">0 items</span>
             </h2>
         </div>
-
         {{-- Cart items - Scrollable area with fixed width placeholders --}}
         <div id="cartItems" class="p-5 overflow-y-auto flex-1 w-full">
             {{-- Empty state with same structure as filled cart to maintain width --}}
@@ -125,14 +124,7 @@
                         <div class="w-7 h-7 rounded-full bg-gray-200"></div>
                     </div>
                     <div class="w-20 h-4 bg-gray-200 rounded flex-shrink-0"></div>
-                </div>
-
-                {{-- Centered message overlay --}}
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style="margin-top: 60px;">
-                    <i class="fas fa-shopping-cart text-4xl text-gray-200 mb-3"></i>
-                    <span class="block font-medium text-gray-400">Cart is empty</span>
-                    <span class="text-xs text-gray-300 mt-1">Click on menu items to add them</span>
-                </div>
+                </div>               
             </div>
         </div>
 

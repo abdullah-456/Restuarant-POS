@@ -31,6 +31,7 @@ class TableController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active', true);
 
+        // dd((new RestaurantTable)->getTable(), config('database.default'), config('database.connections.'.config('database.default').'.database'));
         RestaurantTable::create($validated);
 
         return redirect()->route('admin.tables.index')->with('success', 'Table created successfully.');

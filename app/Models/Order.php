@@ -12,7 +12,6 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'restaurant_table_id',
-        'table_id',
         'waiter_id',
         'status',
         'notes',
@@ -35,9 +34,9 @@ class Order extends Model
     ];
 
     public function table()
-    {
-        return $this->belongsTo(RestaurantTable::class, 'restaurant_table_id');
-    }
+{
+    return $this->belongsTo(\App\Models\RestaurantTable::class, 'restaurant_table_id');
+}
 
     public function waiter()
     {
