@@ -14,7 +14,7 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        $totalSalesToday   = Order::where('status', 'paid')->whereDate('paid_at', $today)->sum('total');
+        $totalSalesToday = Order::whereDate('created_at', $today)->sum('total');
         $totalOrdersToday  = Order::whereDate('created_at', $today)->count();
         $pendingOrders     = Order::whereIn('status', ['confirmed', 'preparing', 'ready'])->count();
         $totalUsers        = User::count();

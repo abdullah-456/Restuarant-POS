@@ -34,10 +34,25 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Revenue (Last 30 Days)</h2>
-            <canvas id="revenueChart" height="100"></canvas>
+            <div class="relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+        
+    </div>
+
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 lg:sticky lg:top-24">
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Summary</h2>
+            <ul class="space-y-2 text-sm md:text-base text-gray-700">
+                <li>Total sales today: <strong>Rs. {{ number_format($stats['total_sales_today'], 2) }}</strong></li>
+                <li>Total orders today: <strong>{{ $stats['total_orders_today'] }}</strong></li>
+                <li>Pending orders: <strong>{{ $stats['pending_orders'] }}</strong></li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 lg:sticky lg:top-24 mt-4">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Top Selling Items Today</h2>
             <div class="space-y-2 md:space-y-3">
                 @forelse($topSellingItems as $item)
@@ -54,17 +69,6 @@
                     <p class="text-gray-500 text-center py-6 md:py-8 text-sm md:text-base">No sales today</p>
                 @endforelse
             </div>
-        </div>
-    </div>
-
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 lg:sticky lg:top-24">
-            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Summary</h2>
-            <ul class="space-y-2 text-sm md:text-base text-gray-700">
-                <li>Total sales today: <strong>Rs. {{ number_format($stats['total_sales_today'], 2) }}</strong></li>
-                <li>Total orders today: <strong>{{ $stats['total_orders_today'] }}</strong></li>
-                <li>Pending orders: <strong>{{ $stats['pending_orders'] }}</strong></li>
-            </ul>
         </div>
     </div>
 </div>

@@ -54,10 +54,16 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Revenue Chart (Last 30 Days)</h2>
-            <canvas id="revenueChart" height="100"></canvas>
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Revenue (Last 30 Days)</h2>
+            <div class="relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
         </div>
 
+    
+    </div>
+
+    <div class="lg:col-span-1">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Top Selling Items Today</h2>
             <div class="space-y-2 md:space-y-3">
@@ -77,45 +83,10 @@
             </div>
         </div>
     </div>
-
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 lg:sticky lg:top-24">
-            <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Quick Actions</h2>
-            <div class="space-y-2">
-                <a href="{{ route('admin.users.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-users w-5 md:w-6 text-blue-600 group-hover:text-blue-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">Manage Users</span>
-                </a>
-                <a href="{{ route('admin.tables.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-green-50 hover:bg-green-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-table w-5 md:w-6 text-green-600 group-hover:text-green-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">Manage Tables</span>
-                </a>
-                <a href="{{ route('admin.categories.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-folder w-5 md:w-6 text-purple-600 group-hover:text-purple-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">Manage Categories</span>
-                </a>
-                <a href="{{ route('admin.menu-items.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-utensils w-5 md:w-6 text-orange-600 group-hover:text-orange-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">Manage Menu Items</span>
-                </a>
-                <a href="{{ route('admin.orders.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-shopping-cart w-5 md:w-6 text-yellow-600 group-hover:text-yellow-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">View Orders</span>
-                </a>
-                <a href="{{ route('admin.reports.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-chart-bar w-5 md:w-6 text-indigo-600 group-hover:text-indigo-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">View Reports</span>
-                </a>
-                <a href="{{ route('admin.settings.index') }}" class="flex items-center px-3 md:px-4 py-2 md:py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition group text-sm md:text-base">
-                    <i class="fas fa-cog w-5 md:w-6 text-gray-600 group-hover:text-gray-700"></i>
-                    <span class="ml-2 md:ml-3 font-medium text-gray-700 group-hover:text-gray-900">Settings</span>
-                </a>
-            </div>
-        </div>
-    </div>
 </div>
 
 @push('scripts')
+
 <script>
 const revenueData = @json($revenueChart);
 if (revenueData && revenueData.length > 0) {
