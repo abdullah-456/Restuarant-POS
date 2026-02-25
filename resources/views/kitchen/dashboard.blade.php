@@ -12,210 +12,148 @@
         </button>
     </div>
 
-    {{-- Status columns --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-yellow-700">Confirmed</h3>
-                <span id="count-confirmed" class="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">0</span>
+    <div class="grid grid-cols-1 gap-6">
+        <div class="space-y-4">
+            <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-orange-100">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                        <i class="fas fa-fire-burner text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-lg">Current Kitchen Tickets</h3>
+                        <p class="text-xs text-gray-500">Orders waiting to be printed or cooked</p>
+                    </div>
+                </div>
+                <span id="count-current" class="text-lg font-bold bg-orange-600 text-white px-4 py-1 rounded-full shadow-sm">0</span>
             </div>
-            <div id="col-confirmed" class="space-y-4"></div>
-        </div>
-
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-blue-700">Preparing</h3>
-                <span id="count-preparing" class="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">0</span>
+            
+            <div id="col-current" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {{-- Orders will be injected here --}}
             </div>
-            <div id="col-preparing" class="space-y-4"></div>
         </div>
-
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-green-700">Ready</h3>
-                <span id="count-ready" class="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">0</span>
-            </div>
-            <div id="col-ready" class="space-y-4"></div>
-        </div>
-
     </div>
 </div>
 
 @push('scripts')
 <script>
     let isUpdating = false;
+    let knownOrderIds = new Set();
+    let isInitialLoad = true;
 
     function loadOrders() {
+        if (isUpdating) return;
+        
         fetch('{{ route("kitchen.orders.list") }}', { headers: { 'Accept': 'application/json' }})
             .then(r => r.json())
             .then(orders => {
-                // Clear columns
-                const colConfirmed = document.getElementById('col-confirmed');
-                const colPreparing = document.getElementById('col-preparing');
-                const colReady = document.getElementById('col-ready');
+                const container = document.getElementById('col-current');
+                const countBadge = document.getElementById('count-current');
+                
+                container.innerHTML = '';
+                countBadge.textContent = orders.length;
 
-                colConfirmed.innerHTML = '';
-                colPreparing.innerHTML = '';
-                colReady.innerHTML = '';
+                if (orders.length === 0) {
+                    container.innerHTML = '<div class="col-span-full py-12 text-center text-gray-400">No active tickets</div>';
+                    return;
+                }
 
-                // Normalize: only show orders kitchen cares about
-                // (adjust this if you want to show more statuses)
-                const visible = (orders || []).filter(o =>
-                    ['confirmed', 'preparing', 'ready'].includes(String(o.status || '').toLowerCase())
-                );
-
-                // Counters
-                const counts = { confirmed: 0, preparing: 0, ready: 0 };
-
-                visible.forEach(order => {
-                    const status = String(order.status || '').toLowerCase();
-                    counts[status]++;
-
-                    const card = createOrderCard(order);
-
-                    if (status === 'confirmed') colConfirmed.appendChild(card);
-                    if (status === 'preparing') colPreparing.appendChild(card);
-                    if (status === 'ready') colReady.appendChild(card);
+                orders.forEach(order => {
+                    container.appendChild(createOrderCard(order));
+                    
+                    if (order.has_new_items) {
+                        autoPrintOrder(order.id);
+                    }
                 });
-
-                document.getElementById('count-confirmed').textContent = counts.confirmed;
-                document.getElementById('count-preparing').textContent = counts.preparing;
-                document.getElementById('count-ready').textContent = counts.ready;
-
-                // Empty states
-                if (!counts.confirmed) colConfirmed.innerHTML = emptyState('No confirmed orders');
-                if (!counts.preparing) colPreparing.innerHTML = emptyState('No preparing orders');
-                if (!counts.ready) colReady.innerHTML = emptyState('No ready orders');
+                isInitialLoad = false;
             })
             .catch(err => console.error('Error loading orders:', err));
     }
 
-    function emptyState(text) {
-        return `
-            <div class="bg-white border border-gray-200 rounded-xl p-5 text-center text-gray-400">
-                <i class="fas fa-inbox text-2xl mb-2"></i>
-                <div class="text-sm font-semibold">${text}</div>
-            </div>
-        `;
+    function autoPrintOrder(orderId) {
+        let printFrame = document.getElementById('print-iframe');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-iframe';
+            printFrame.style.display = 'none';
+            document.body.appendChild(printFrame);
+        }
+
+        printFrame.src = `/admin/orders/${orderId}/print-kitchen?new_only=1`;
+
+        setTimeout(() => {
+            fetch(`/kitchen/orders/${orderId}/mark-printed`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            }).catch(e => console.error('Failed to mark as printed:', e));
+        }, 3000);
     }
 
     function createOrderCard(order) {
         const status = String(order.status || '').toLowerCase();
+        let borderClass = 'border-l-orange-500';
+        let badgeClass = 'bg-orange-100 text-orange-800';
+        let statusText = status.toUpperCase();
+        
+        if (status === 'ready') {
+            borderClass = 'border-l-green-500 opacity-75';
+            badgeClass = 'bg-green-100 text-green-800';
+        } else if (status === 'paid') {
+            borderClass = 'border-l-blue-500 opacity-60';
+            badgeClass = 'bg-blue-100 text-blue-800';
+        }
 
-        const borderClass =
-            status === 'confirmed' ? 'border-l-yellow-500' :
-            status === 'preparing' ? 'border-l-blue-500' :
-            'border-l-green-500';
-
-        const badgeClass =
-            status === 'confirmed' ? 'bg-yellow-100 text-yellow-800' :
-            status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-            'bg-green-100 text-green-800';
-
-        const confirmedAt = order.confirmed_at ? new Date(order.confirmed_at) : null;
-        const timeAgo = confirmedAt ? getTimeAgo(confirmedAt) : '—';
-
-        const tableName = (order.table && order.table.name) ? order.table.name : 'No table';
-
-        // Items list
-        const allItems = (order.items || []);
-
-const oldItems = allItems.filter(i => Number(i.is_new || 0) !== 1);
-const newItems = allItems.filter(i => Number(i.is_new || 0) === 1);
-
-const renderItem = (item) => {
-    const qty = item.quantity ?? 1;
-    const name = item.item_name ?? 'Item';
-    const notes = item.notes ? ` <span class="text-xs text-gray-500">(${escapeHtml(item.notes)})</span>` : '';
-    const isNew = Number(item.is_new || 0) === 1;
-    const newBadge = isNew ? `<span class="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-600 text-white">NEW</span>` : '';
-
-    return `
-        <div class="flex justify-between gap-2 text-sm">
-            <div class="text-gray-800 min-w-0">
-                <span class="font-semibold">${qty}x</span> ${escapeHtml(name)} ${newBadge} ${notes}
+        const itemsHtml = (order.items || []).map(item => `
+            <div class="flex justify-between gap-2 text-sm border-b border-gray-50 pb-2 mb-2 last:border-0 last:mb-0">
+                <div class="text-gray-800 min-w-0">
+                    <span class="font-bold text-gray-900">${item.quantity}x</span> 
+                    ${item.is_new ? '<strong class="text-green-600 bg-green-50 px-1 rounded text-[10px] mr-1">NEW</strong>' : ''}
+                    ${escapeHtml(item.item_name)}
+                    ${item.notes ? `<div class="text-xs text-red-500 font-medium ml-5 italic">*** ${escapeHtml(item.notes)} ***</div>` : ''}
+                </div>
             </div>
-        </div>
-    `;
-};
-
-let itemsHtml = '';
-
-if (oldItems.length) {
-    itemsHtml += oldItems.map(renderItem).join('');
-}
-
-if (newItems.length) {
-    itemsHtml += `
-        <div class="my-3 flex items-center gap-2">
-            <div class="h-px bg-gray-200 flex-1"></div>
-            <div class="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-1 rounded-full">
-                Newly Added
-            </div>
-            <div class="h-px bg-gray-200 flex-1"></div>
-        </div>
-    `;
-    itemsHtml += newItems.map(renderItem).join('');
-}
-
-        const actionButtons = `
-            <div class="flex gap-2 mt-4">
-                ${status === 'confirmed' ? `
-                    <button ${isUpdating ? 'disabled' : ''} onclick="updateStatus(${order.id}, 'preparing')"
-                        class="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl hover:bg-blue-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-play mr-1"></i> Start Preparing
-                    </button>
-                ` : ''}
-
-                ${status === 'preparing' ? `
-                    <button ${isUpdating ? 'disabled' : ''} onclick="updateStatus(${order.id}, 'ready')"
-                        class="flex-1 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-check mr-1"></i> Mark Ready
-                    </button>
-                ` : ''}
-
-                ${status === 'ready' ? `
-                    <button disabled
-                        class="flex-1 bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed">
-                        <i class="fas fa-bell mr-1"></i> Waiting for pickup
-                    </button>
-                ` : ''}
-            </div>
-        `;
+        `).join('');
 
         const card = document.createElement('div');
         card.className = `bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-5 border-l-4 ${borderClass}`;
 
+        let actionButton = '';
+        if (status === 'confirmed' || status === 'preparing') {
+            actionButton = `
+                <button onclick="updateStatus(${order.id}, 'ready')" 
+                        class="w-full mt-4 bg-orange-600 text-white px-4 py-2 rounded-xl hover:bg-orange-700 transition font-bold text-sm shadow-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-check"></i> Mark Ready
+                </button>
+            `;
+        } else {
+             actionButton = `<div class="w-full mt-4 bg-gray-50 text-gray-400 py-2 rounded-xl text-center text-[10px] font-bold">PROCESSED</div>`;
+        }
+
         card.innerHTML = `
-            <div class="flex justify-between items-start gap-3 mb-3">
+            <div class="flex justify-between items-start mb-3">
                 <div class="min-w-0">
-                    <h3 class="text-lg font-bold text-gray-800 truncate">${escapeHtml(order.order_number || 'ORDER')}</h3>
-                    <p class="text-sm text-gray-600">
-                        <i class="fas fa-table mr-1"></i>${escapeHtml(tableName)}
-                    </p>
-                    <p class="text-xs text-gray-500 mt-1">${timeAgo}</p>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded ${badgeClass}">${statusText}</span>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded bg-gray-800 text-white">${order.order_type.toUpperCase()}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 truncate">#${order.order_number}</h3>
+                    <div class="text-xs font-bold text-gray-700">
+                        <i class="fas fa-table mr-1"></i>${order.table.name}
+                    </div>
                 </div>
-
-                <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass} flex-shrink-0">
-                    ${status.charAt(0).toUpperCase() + status.slice(1)}
-                </span>
             </div>
-
-            <div class="space-y-2">
-                ${itemsHtml || `<p class="text-sm text-gray-400">No items</p>`}
-            </div>
-
-            ${actionButtons}
+            ${order.delivery_address ? `<div class="mt-2 text-[10px] text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100"><strong>Address:</strong> ${escapeHtml(order.delivery_address)}</div>` : ''}
+            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 mt-3">${itemsHtml}</div>
+            ${actionButton}
         `;
-
         return card;
     }
 
     function updateStatus(orderId, status) {
         if (isUpdating) return;
         isUpdating = true;
-
         fetch(`/kitchen/orders/${orderId}/status`, {
             method: 'POST',
             headers: {
@@ -225,45 +163,13 @@ if (newItems.length) {
             },
             body: JSON.stringify({ status })
         })
-        .then(r => r.json())
-        .then(data => {
-            if (data && data.success) {
-                playSound();
-                loadOrders();
-            } else {
-                console.error(data);
-                alert(data?.message || 'Failed to update order status');
-            }
-        })
-        .catch(err => console.error('Error updating status:', err))
-        .finally(() => {
-            isUpdating = false;
-        });
-    }
-
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        if (seconds < 10) return 'just now';
-        if (seconds < 60) return seconds + ' seconds ago';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + ' minutes ago';
-        const hours = Math.floor(minutes / 60);
-        return hours + ' hours ago';
-    }
-
-    function playSound() {
-        const audio = new Audio('/sounds/notification.mp3');
-        audio.play().catch(() => {});
+        .then(() => loadOrders())
+        .finally(() => isUpdating = false);
     }
 
     function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     loadOrders();

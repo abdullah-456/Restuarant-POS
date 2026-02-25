@@ -10,26 +10,70 @@
         <div class="flex flex-col lg:flex-row gap-6">
             {{-- ── LEFT: Menu Section - Takes remaining space --}}
             <div class="lg:flex-grow min-w-0"> {{-- Changed to flex-grow --}}
-                {{-- Table selector --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-chair mr-1 text-blue-600"></i> Select Table <span class="text-red-500">*</span>
-                    </label>
-                    <select name="restaurant_table_id" id="tableSelect" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('restaurant_table_id') border-red-500 @enderror">
-                        <option value="">— Choose a table —</option>
-                        @foreach($tables as $t)
-                        <option value="{{ $t->id }}"
-                            @if(optional($selectedTable)->id == $t->id) selected @endif
-                            @if($t->status === 'occupied') disabled class="text-gray-400" @endif>
-                            {{ $t->name }} (Cap: {{ $t->capacity }})
-                            @if($t->status !== 'available') — {{ ucfirst($t->status) }} @endif
-                        </option>
-                        @endforeach
-                    </select>
-                    @error('restaurant_table_id')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                {{-- Order Options: Dining / Takeaway / Delivery --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-truck mr-1 text-orange-600"></i> Order Type <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="order_type" value="dining" class="peer hidden" checked onchange="toggleOrderTypeFields()">
+                                <div class="text-center py-2 px-1 border border-gray-200 rounded-lg peer-checked:bg-orange-600 peer-checked:text-white peer-checked:border-orange-600 transition text-xs font-bold uppercase">
+                                    Dining
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="order_type" value="takeaway" class="peer hidden" onchange="toggleOrderTypeFields()">
+                                <div class="text-center py-2 px-1 border border-gray-200 rounded-lg peer-checked:bg-orange-600 peer-checked:text-white peer-checked:border-orange-600 transition text-xs font-bold uppercase">
+                                    Takeaway
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="order_type" value="delivery" class="peer hidden" onchange="toggleOrderTypeFields()">
+                                <div class="text-center py-2 px-1 border border-gray-200 rounded-lg peer-checked:bg-orange-600 peer-checked:text-white peer-checked:border-orange-600 transition text-xs font-bold uppercase">
+                                    Delivery
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="tableSelectorContainer" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-chair mr-1 text-blue-600"></i> Select Table <span class="text-red-500">*</span>
+                        </label>
+                        <select name="restaurant_table_id" id="tableSelect"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('restaurant_table_id') border-red-500 @enderror">
+                            <option value="">— Choose a table —</option>
+                            @foreach($tables as $t)
+                            <option value="{{ $t->id }}"
+                                @if(optional($selectedTable)->id == $t->id) selected @endif
+                                @if($t->status === 'occupied') disabled class="text-gray-400" @endif>
+                                {{ $t->name }} (Cap: {{ $t->capacity }})
+                                @if($t->status !== 'available') — {{ ucfirst($t->status) }} @endif
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('restaurant_table_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Delivery Address & Phone (Hidden by default) --}}
+                <div id="deliveryInfoContainer" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Customer Phone</label>
+                            <input type="text" name="customer_phone" placeholder="Contact number"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Delivery Address <span class="text-red-500">*</span></label>
+                            <input type="text" name="delivery_address" id="delivery_address" placeholder="Full address for delivery"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Search --}}
@@ -41,8 +85,8 @@
                     </div>
                 </div>
 
-                {{-- Categories & Menu - With scrollable area and more columns --}}
-                <div class="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                {{-- Categories & Menu --}}
+                <div class="space-y-4 max-h-[calc(100vh-420px)] overflow-y-auto pr-2">
                     @foreach($categories as $category)
                     <div class="category-block" data-category="{{ strtolower($category->name) }}">
                         <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 px-1">
@@ -94,37 +138,12 @@
                 <span id="cartCount" class="ml-auto text-sm bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full">0 items</span>
             </h2>
         </div>
-        {{-- Cart items - Scrollable area with fixed width placeholders --}}
+        {{-- Cart items - Scrollable area --}}
         <div id="cartItems" class="p-5 overflow-y-auto flex-1 w-full">
-            {{-- Empty state with same structure as filled cart to maintain width --}}
-            <div id="emptyCart" class="w-full">
-                {{-- Placeholder item 1 - mimics the structure of a cart item --}}
-                <div class="flex items-center gap-2 py-3 border-b border-gray-50 opacity-0 h-16">
-                    <div class="flex-1 min-w-0 max-w-[160px]">
-                        <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                        <div class="h-3 bg-gray-200 rounded w-16"></div>
-                    </div>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                        <div class="w-8 h-4 bg-gray-200 rounded"></div>
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                    </div>
-                    <div class="w-20 h-4 bg-gray-200 rounded flex-shrink-0"></div>
-                </div>
-                
-                {{-- Placeholder item 2 - to fill space --}}
-                <div class="flex items-center gap-2 py-3 border-b border-gray-50 opacity-0 h-16">
-                    <div class="flex-1 min-w-0 max-w-[160px]">
-                        <div class="h-4 bg-gray-200 rounded w-28 mb-2"></div>
-                        <div class="h-3 bg-gray-200 rounded w-20"></div>
-                    </div>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                        <div class="w-8 h-4 bg-gray-200 rounded"></div>
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                    </div>
-                    <div class="w-20 h-4 bg-gray-200 rounded flex-shrink-0"></div>
-                </div>               
+            <div id="emptyCart" class="text-center py-12">
+                <i class="fas fa-shopping-cart text-4xl text-gray-200 mb-3 block"></i>
+                <span class="block font-medium text-gray-400">Cart is empty</span>
+                <span class="text-xs text-gray-300 mt-1">Click on menu items to add them</span>
             </div>
         </div>
 
@@ -203,6 +222,32 @@
     // Initialize cart
     let cart = {};
 
+    function toggleOrderTypeFields() {
+        const type = document.querySelector('input[name="order_type"]:checked').value;
+        const tableCont = document.getElementById('tableSelectorContainer');
+        const deliveryCont = document.getElementById('deliveryInfoContainer');
+        const tableSelect = document.getElementById('tableSelect');
+        const deliveryAddr = document.getElementById('delivery_address');
+
+        if (type === 'dining') {
+            tableCont.classList.remove('hidden');
+            deliveryCont.classList.add('hidden');
+            tableSelect.required = true;
+            deliveryAddr.required = false;
+        } else if (type === 'delivery') {
+            tableCont.classList.add('hidden');
+            deliveryCont.classList.remove('hidden');
+            tableSelect.required = false;
+            deliveryAddr.required = true;
+        } else {
+            // Takeaway
+            tableCont.classList.add('hidden');
+            deliveryCont.classList.add('hidden');
+            tableSelect.required = false;
+            deliveryAddr.required = false;
+        }
+    }
+
     function addToCart(id, name, price) {
         if (cart[id]) {
             cart[id].qty++;
@@ -210,7 +255,8 @@
             cart[id] = { 
                 name: name, 
                 price: price, 
-                qty: 1 
+                qty: 1,
+                notes: ''
             };
         }
         renderCart();
@@ -228,60 +274,31 @@
         renderCart();
     }
 
+    function updateItemNote(id, note) {
+        if (cart[id]) cart[id].notes = note;
+    }
+
     function renderCart() {
     const cartItemsEl = document.getElementById('cartItems');
     const submitBtn = document.getElementById('submitBtn');
     const cartCount = document.getElementById('cartCount');
-    const hiddenInputs = document.getElementById('hiddenCartInputs');
-
-    hiddenInputs.innerHTML = '';
 
     const keys = Object.keys(cart);
     cartCount.textContent = keys.length + (keys.length === 1 ? ' item' : ' items');
 
     if (keys.length === 0) {
-        // Empty cart - show the placeholder structure
-        let emptyHtml = `
-            <div id="emptyCart" class="w-full relative min-h-[300px]">
-                <div class="flex items-center gap-2 py-3 border-b border-gray-50 opacity-0 h-16">
-                    <div class="flex-1 min-w-0 max-w-[160px]">
-                        <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                        <div class="h-3 bg-gray-200 rounded w-16"></div>
-                    </div>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                        <div class="w-8 h-4 bg-gray-200 rounded"></div>
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                    </div>
-                    <div class="w-20 h-4 bg-gray-200 rounded flex-shrink-0"></div>
-                </div>
-                <div class="flex items-center gap-2 py-3 border-b border-gray-50 opacity-0 h-16">
-                    <div class="flex-1 min-w-0 max-w-[160px]">
-                        <div class="h-4 bg-gray-200 rounded w-28 mb-2"></div>
-                        <div class="h-3 bg-gray-200 rounded w-20"></div>
-                    </div>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                        <div class="w-8 h-4 bg-gray-200 rounded"></div>
-                        <div class="w-7 h-7 rounded-full bg-gray-200"></div>
-                    </div>
-                    <div class="w-20 h-4 bg-gray-200 rounded flex-shrink-0"></div>
-                </div>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style="margin-top: 60px;">
-                    <i class="fas fa-shopping-cart text-4xl text-gray-200 mb-3"></i>
-                    <span class="block font-medium text-gray-400">Cart is empty</span>
-                    <span class="text-xs text-gray-300 mt-1">Click on menu items to add them</span>
-                </div>
+        cartItemsEl.innerHTML = `
+            <div id="emptyCart" class="text-center py-12">
+                <i class="fas fa-shopping-cart text-4xl text-gray-200 mb-3 block"></i>
+                <span class="block font-medium text-gray-400">Cart is empty</span>
+                <span class="text-xs text-gray-300 mt-1">Click on menu items to add them</span>
             </div>
         `;
-        
-        cartItemsEl.innerHTML = emptyHtml;
         submitBtn.disabled = true;
         updateTotals(0);
         return;
     }
 
-    // Hide empty cart placeholders and show actual items
     let subtotal = 0;
     let html = '';
     
@@ -291,26 +308,29 @@
         subtotal += lineTotal;
         
         html += `
-            <div class="flex items-center gap-2 py-3 border-b border-gray-50 last:border-0 w-full">
-                <div class="flex-1 min-w-0 max-w-[160px]">
-                    <p class="text-base font-medium text-gray-800 truncate" title="${item.name}">${item.name}</p>
-                    <p class="text-sm text-blue-600">Rs. ${item.price.toFixed(2)} each</p>
-                    <input type="hidden" name="items[${idx}][menu_item_id]" value="${id}">
-                    <input type="hidden" name="items[${idx}][quantity]" value="${item.qty}">
-                    <input type="hidden" name="items[${idx}][notes]" value="">
+            <div class="py-4 border-b border-gray-100 last:border-0">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 truncate">${item.name}</p>
+                        <p class="text-xs text-gray-500">Rs. ${item.price.toFixed(2)} / unit</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                        <button type="button" onclick="changeQty(${id}, -1)" class="w-6 h-6 rounded bg-white text-gray-600 hover:text-red-500 flex items-center justify-center shadow-sm transition-colors">
+                            <i class="fas fa-minus text-[10px]"></i>
+                        </button>
+                        <span class="w-6 text-center font-bold text-sm">${item.qty}</span>
+                        <button type="button" onclick="changeQty(${id}, 1)" class="w-6 h-6 rounded bg-white text-gray-600 hover:text-blue-500 flex items-center justify-center shadow-sm transition-colors">
+                            <i class="fas fa-plus text-[10px]"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                    <button type="button" onclick="changeQty(${id}, -1)"
-                            class="w-7 h-7 rounded-full bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 flex items-center justify-center text-sm transition flex-shrink-0">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <span class="w-8 text-center text-base font-bold flex-shrink-0">${item.qty}</span>
-                    <button type="button" onclick="changeQty(${id}, 1)"
-                            class="w-7 h-7 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 flex items-center justify-center text-sm transition flex-shrink-0">
-                        <i class="fas fa-plus"></i>
-                    </button>
+                <div class="flex items-center gap-2">
+                    <input type="text" name="items[${idx}][notes]" value="${item.notes}" oninput="updateItemNote(${id}, this.value)" 
+                           placeholder="Item instructions..." class="flex-1 text-xs border-0 bg-gray-50 rounded-lg h-8 px-2 focus:ring-1 focus:ring-blue-400">
+                    <div class="text-sm font-bold text-gray-900">Rs. ${lineTotal.toFixed(2)}</div>
                 </div>
-                <div class="text-base font-semibold text-gray-800 flex-shrink-0 w-20 text-right">Rs. ${lineTotal.toFixed(2)}</div>
+                <input type="hidden" name="items[${idx}][menu_item_id]" value="${id}">
+                <input type="hidden" name="items[${idx}][quantity]" value="${item.qty}">
             </div>
         `;
     });
@@ -338,12 +358,12 @@
 
     // Menu search functionality
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded - initializing search and form validation');
+        toggleOrderTypeFields(); // Initial call
         
         const searchInput = document.getElementById('menuSearch');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
-                const q = this.value.toLowerCase();
+                const q = this.value.toLowerCase().trim();
                 document.querySelectorAll('.menu-item-btn').forEach(btn => {
                     const name = btn.dataset.name || '';
                     btn.style.display = name.includes(q) ? 'flex' : 'none';
@@ -357,30 +377,69 @@
         }
 
         // Form submit validation
+        // Form submit validation & AJAX
         const form = document.getElementById('orderForm');
         if (form) {
             form.addEventListener('submit', function(e) {
-                if (!document.getElementById('tableSelect').value) {
-                    e.preventDefault();
-                    alert('Please select a table before placing the order.');
+                e.preventDefault();
+                const type = document.querySelector('input[name="order_type"]:checked').value;
+                
+                if (type === 'dining' && !document.getElementById('tableSelect').value) {
+                    window.Alert.error('Please select a table for dining orders.');
                     return false;
                 }
                 
-                if (Object.keys(cart).length === 0) {
-                    e.preventDefault();
-                    alert('Please add at least one item to your order.');
+                if (type === 'delivery' && !document.getElementById('delivery_address').value) {
+                    window.Alert.error('Please provide a delivery address.');
                     return false;
                 }
+
+                if (Object.keys(cart).length === 0) {
+                    window.Alert.error('Please add items to the cart.');
+                    return false;
+                }
+
+                const btn = document.getElementById('submitBtn');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Placing Order...';
+
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        if (data.errors) {
+                            const errors = Object.values(data.errors).flat().join('\n');
+                            throw new Error(errors);
+                        }
+                        throw new Error(data.message || 'Failed to place order.');
+                    }
+                    return data;
+                })
+                .then(data => {
+                    if (data.success) {
+                        window.Alert.success(data.message).then(() => {
+                            window.location.href = data.redirect_url;
+                        });
+                    }
+                })
+                .catch(err => {
+                    window.Alert.error(err.message);
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
             });
         }
-
-        // Test if menu item buttons have onclick handlers
-        const menuButtons = document.querySelectorAll('.menu-item-btn');
-        console.log('Found', menuButtons.length, 'menu buttons');
-        
-        menuButtons.forEach((btn, index) => {
-            console.log(`Button ${index} onclick:`, btn.getAttribute('onclick'));
-        });
     });
 </script>
 @endpush

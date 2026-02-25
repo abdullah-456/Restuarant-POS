@@ -95,8 +95,8 @@
                 {{-- Payment method --}}
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        @foreach(['cash' => 'fa-money-bill-wave', 'card' => 'fa-credit-card', 'upi' => 'fa-mobile-alt', 'other' => 'fa-ellipsis-h'] as $method => $icon)
+                    <div class="grid grid-cols-3 gap-3">
+                        @foreach(['cash' => 'fa-money-bill-wave', 'card' => 'fa-credit-card', 'online' => 'fa-globe'] as $method => $icon)
                             <label class="flex flex-col items-center gap-1.5 border-2 rounded-xl p-3 cursor-pointer transition payment-method-label
                                          {{ old('payment_method', 'cash') === $method ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300' }}">
                                 <input type="radio" name="payment_method" value="{{ $method }}"
@@ -163,7 +163,7 @@
                            class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
-                <button type="submit"
+                <button type="submit" id="submitBtn"
                         class="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-base transition flex items-center justify-center gap-2 shadow-sm shadow-green-200">
                     <i class="fas fa-check-circle"></i> Confirm Payment
                 </button>
@@ -171,6 +171,57 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const btn = document.getElementById('submitBtn');
+    const formData = new FormData(form);
+    const originalText = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            if (data.errors) {
+                // Handle validation errors
+                const errors = Object.values(data.errors).flat().join('\n');
+                throw new Error(errors);
+            }
+            throw new Error(data.message || 'Payment failed');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            // Trigger Print
+            const printUrl = `/admin/orders/${data.print_order_id}/print-bill`;
+            window.open(printUrl, '_blank');
+            
+            window.Alert.success(data.message).then(() => {
+                window.location.href = "{{ route('cashier.dashboard') }}";
+            });
+        }
+    })
+    .catch(err => {
+        window.Alert.error(err.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+});
+</script>
 
 @push('scripts')
 <script>

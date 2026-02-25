@@ -49,14 +49,24 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $stats = [
+            'total_sales_today' => $totalSalesToday ?: 0,
+            'total_orders_today' => $totalOrdersToday ?: 0,
+            'pending_orders' => $pendingOrders ?: 0,
+            'total_users' => $totalUsers ?: 0,
+            'formatted_total_sales' => number_format($totalSalesToday ?: 0, 2),
+        ];
+
+        if (request()->ajax()) {
+            return response()->json([
+                'stats' => $stats,
+                'topSellingItems' => $topSellingItems
+            ]);
+        }
+
         return view('admin.dashboard', [
-            'stats' => [
-                'total_sales_today' => $totalSalesToday ?: 0,
-                'total_orders_today' => $totalOrdersToday ?: 0,
-                'pending_orders' => $pendingOrders ?: 0,
-                'total_users' => $totalUsers ?: 0,
-            ],
-            'revenueChart' => $revenueChart, // Now this is a collection, not array
+            'stats' => $stats,
+            'revenueChart' => $revenueChart,
             'topSellingItems' => $topSellingItems,
         ]);
     }

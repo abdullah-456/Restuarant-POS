@@ -15,8 +15,21 @@ class OrderController extends Controller
     public function list()
     {
         $orders = Order::with(['table', 'waiter', 'items'])
-            ->where('status', 'ready')
-            ->oldest('ready_at')
+            ->whereIn('status', ['confirmed', 'preparing', 'ready'])
+            ->oldest('confirmed_at')
+            ->get()
+            ->map(fn($order) => $this->formatOrder($order));
+
+        return response()->json($orders);
+    }
+
+    public function recentPayments()
+    {
+        $orders = Order::with(['table', 'waiter', 'items'])
+            ->where('status', 'paid')
+            ->whereDate('created_at', today())
+            ->latest('updated_at')
+            ->limit(15)
             ->get()
             ->map(fn($order) => $this->formatOrder($order));
 
@@ -48,38 +61,31 @@ class OrderController extends Controller
 
         $request->validate([
             'amount_tendered' => ['required', 'numeric', 'min:0'],
-            'payment_method'  => ['required', 'in:cash,card,upi,other'],
+            'payment_method'  => ['required', 'in:cash,card,online'],
         ]);
 
         $amountTendered = (float) $request->amount_tendered;
         $totalDue       = (float) $order->total;
 
         if ($amountTendered < $totalDue) {
-            return back()->withErrors(['amount_tendered' => 'Amount tendered is less than the total due ($' . number_format($totalDue, 2) . ').'])->withInput();
+            return back()->withErrors(['amount_tendered' => 'Amount tendered is less than the total due (Rs. ' . number_format($totalDue, 2) . ').'])->withInput();
         }
 
         // Build notes with extra info
         $change      = round($amountTendered - $totalDue, 2);
         $notesParts  = [];
         if ($request->reference) $notesParts[] = 'Ref: ' . $request->reference;
-        $notesParts[] = 'Tendered: $' . number_format($amountTendered, 2);
-        $notesParts[] = 'Change: $' . number_format($change, 2);
+        $notesParts[] = 'Tendered: Rs. ' . number_format($amountTendered, 2);
+        $notesParts[] = 'Change: Rs. ' . number_format($change, 2);
         $notes = implode(' | ', $notesParts);
-
-        // Map payment_method: 'upi' → 'mobile_payment'
-        $method = match($request->payment_method) {
-            'upi'   => 'mobile_payment',
-            default => $request->payment_method,
-        };
 
         // Record payment using existing schema columns
         Payment::create([
             'order_id'       => $order->id,
-             'cashier_id'      => auth()->id(),
-            'payment_method' => $method,
+            'cashier_id'     => auth()->id(),
+            'payment_method' => $request->payment_method,
             'amount'         => $totalDue,
             'notes'          => $notes,
-            // 'paid_at'        => now(),
         ]);
 
         // Mark order as paid
@@ -102,8 +108,17 @@ class OrderController extends Controller
             }
         }
 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment received successfully!',
+                'print_order_id' => $order->id
+            ]);
+        }
+
         return redirect()->route('cashier.dashboard')
-            ->with('success', 'Payment of $' . number_format($totalDue, 2) . ' received! Change: $' . number_format($change, 2));
+            ->with('success', 'Payment of Rs. ' . number_format($totalDue, 2) . ' received! Change: Rs. ' . number_format($change, 2))
+            ->with('print_order_id', $order->id);
     }
 
     private function formatOrder(Order $order): array
@@ -111,6 +126,7 @@ class OrderController extends Controller
         return [
             'id'                     => $order->id,
             'order_number'           => $order->order_number,
+            'order_type'             => $order->order_type,
             'status'                 => $order->status,
             'table'                  => ['name' => optional($order->table)->name ?? 'N/A'],
             'waiter'                 => ['name' => optional($order->waiter)->name ?? 'N/A'],

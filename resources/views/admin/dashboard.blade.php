@@ -11,7 +11,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-blue-100 text-xs md:text-sm font-medium">Total Sales Today</p>
-                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">Rs. {{ number_format($stats['total_sales_today']) }}</p>
+                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2" id="stat-sales">Rs. {{ number_format($stats['total_sales_today']) }}</p>
                     </div>
                     <div class="bg-blue-400 bg-opacity-30 rounded-full p-2 md:p-3">
                         <i class="fas fa-money-bill-wave text-xs md:text-2xl"></i>
@@ -22,7 +22,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-green-100 text-xs md:text-sm font-medium">Total Orders</p>
-                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">{{ $stats['total_orders_today'] }}</p>
+                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2" id="stat-orders">{{ $stats['total_orders_today'] }}</p>
                     </div>
                     <div class="bg-green-400 bg-opacity-30 rounded-full p-2 md:p-3">
                         <i class="fas fa-shopping-cart text-xl md:text-2xl"></i>
@@ -33,7 +33,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-yellow-100 text-xs md:text-sm font-medium">Pending Orders</p>
-                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">{{ $stats['pending_orders'] }}</p>
+                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2" id="stat-pending">{{ $stats['pending_orders'] }}</p>
                     </div>
                     <div class="bg-yellow-400 bg-opacity-30 rounded-full p-2 md:p-3">
                         <i class="fas fa-clock text-xl md:text-2xl"></i>
@@ -44,7 +44,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-purple-100 text-xs md:text-sm font-medium">Active Users</p>
-                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2">{{ $stats['total_users'] }}</p>
+                        <p class="text-2xl md:text-3xl font-bold mt-1 md:mt-2" id="stat-users">{{ $stats['total_users'] }}</p>
                     </div>
                     <div class="bg-purple-400 bg-opacity-30 rounded-full p-2 md:p-3">
                         <i class="fas fa-users text-xl md:text-2xl"></i>
@@ -248,10 +248,28 @@ function initializeChart() {
             note.textContent = 'Note: No revenue data available for the selected period';
             canvas.parentElement.appendChild(note);
         }
+
+        // Start polling for stats
+        setInterval(fetchLiveStats, 10000);
+        
     } catch (error) {
         console.error('Error creating chart:', error);
         showMessage('Error loading chart: ' + error.message);
     }
+}
+
+function fetchLiveStats() {
+    fetch('{{ route("admin.dashboard") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(res => res.json())
+        .then(data => {
+            if (data.stats) {
+                document.getElementById('stat-sales').textContent = 'Rs. ' + data.stats.formatted_total_sales;
+                document.getElementById('stat-orders').textContent = data.stats.total_orders_today;
+                document.getElementById('stat-pending').textContent = data.stats.pending_orders;
+                document.getElementById('stat-users').textContent = data.stats.total_users;
+            }
+        })
+        .catch(err => console.error('Stats fetch error:', err));
 }
 </script>
 @endpush

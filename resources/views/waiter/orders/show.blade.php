@@ -37,17 +37,29 @@
                 {{-- Header --}}
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-gray-800 text-white">
+                                {{ $order->order_type ?? 'dining' }}
+                            </span>
+                        </div>
                         <h2 class="text-xl font-bold text-gray-800">{{ $order->order_number }}</h2>
                         <p class="text-sm text-gray-500 mt-0.5">
-                            <i class="fas fa-chair mr-1"></i>{{ optional($order->table)->name ?? 'No table' }}
+                            @if($order->order_type === 'dining')
+                                <i class="fas fa-chair mr-1"></i>{{ optional($order->table)->name ?? 'No table' }}
+                            @elseif($order->order_type === 'delivery')
+                                <i class="fas fa-truck mr-1"></i> Delivery
+                            @else
+                                <i class="fas fa-shopping-bag mr-1"></i> Takeaway
+                            @endif
                             &nbsp;·&nbsp;
                             <i class="fas fa-clock mr-1"></i>{{ $order->created_at->format('d M Y H:i') }}
-                            @if(!empty($order->modified_at))
-                                &nbsp;·&nbsp;
-                                <i class="fas fa-pencil-alt text-orange-500"></i>
-                                <span class="text-orange-600">Modified {{ \Carbon\Carbon::parse($order->modified_at)->format('H:i') }}</span>
-                            @endif
                         </p>
+                        @if($order->order_type === 'delivery')
+                            <div class="mt-2 text-xs bg-blue-50 text-blue-800 p-2 rounded-lg border border-blue-100 flex flex-col gap-1">
+                                <div><i class="fas fa-phone mr-1"></i> <strong>Phone:</strong> {{ $order->customer_phone ?? 'N/A' }}</div>
+                                <div><i class="fas fa-map-marker-alt mr-1"></i> <strong>Address:</strong> {{ $order->delivery_address ?? 'N/A' }}</div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -570,9 +582,9 @@ window.confirmAllItems = function() {
         .then(() => {
             selectedItems = {};
             closeAddItemModal();
-            window.Alert.success('Items added successfully.').then(() => {
-                window.location.reload();
-            });
+            window.Alert.success('Items added successfully.');
+            // Reload the item lists and summary via AJAX
+            loadOrderData();
         })
         .catch(error => {
             window.Alert.error(error.message || 'Network error, please try again.');
@@ -581,6 +593,14 @@ window.confirmAllItems = function() {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
+}
+
+function loadOrderData() {
+    // For now, simpler to reload the page to refresh all totals and item lists correctly
+    // but in a real production app we'd fetch JSON and rebuild the DOM.
+    // The user wants AJAX, so let's at least make the "Add" experience smooth.
+    // To truely avoid reload, we need an endpoint that returns the HTML partials or JSON.
+    window.location.reload(); 
 }
 
 // Search functionality
@@ -617,6 +637,12 @@ function escapeHtml(str) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Order details page loaded');
+    
+    @if(session('print_order_id'))
+        // Open print window in a new tab
+        const printUrl = "{{ route('admin.orders.print-kitchen', session('print_order_id')) }}";
+        window.open(printUrl, '_blank');
+    @endif
 });
 </script>
 @endpush

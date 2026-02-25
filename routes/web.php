@@ -37,8 +37,9 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::resource('menu-items', MenuItemController::class)->names('admin.menu-items')->except('show');
 
     Route::resource('orders', AdminOrderController::class)->names('admin.orders')->only(['index', 'show']);
-    // Admin can cancel orders
     Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
+    Route::get('/orders/{order}/print-kitchen', [AdminOrderController::class, 'printKitchen'])->name('admin.orders.print-kitchen');
+    Route::get('/orders/{order}/print-bill', [AdminOrderController::class, 'printBill'])->name('admin.orders.print-bill');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
     Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('admin.reports.export.excel');
@@ -52,7 +53,6 @@ Route::prefix('admin')->middleware('auth')->group(function () {
 Route::prefix('waiter')->middleware('auth')->group(function () {
     Route::get('/dashboard', [WaiterDashboardController::class, 'index'])->name('waiter.dashboard');
 
-    // Orders
     Route::get('/orders', [WaiterOrderController::class, 'index'])->name('waiter.orders.index');
     Route::get('/orders/create', [WaiterOrderController::class, 'create'])->name('waiter.orders.create');
     Route::post('/orders', [WaiterOrderController::class, 'store'])->name('waiter.orders.store');
@@ -61,9 +61,6 @@ Route::prefix('waiter')->middleware('auth')->group(function () {
     Route::delete('/orders/{order}/remove-item/{item}', [WaiterOrderController::class, 'removeItem'])->name('waiter.orders.remove-item');
     Route::post('/orders/{order}/confirm', [WaiterOrderController::class, 'confirm'])->name('waiter.orders.confirm');
     Route::post('/orders/{order}/cancel', [WaiterOrderController::class, 'cancel'])->name('waiter.orders.cancel');
-    Route::post('/orders/{order}/add-item', [WaiterOrderController::class, 'addItem'])->name('waiter.orders.add-item');
-    Route::post('/orders/{order}/add-items-bulk', [WaiterOrderController::class, 'addItemsBulk'])
-    ->name('waiter.orders.add-items-bulk');
 });
 
 // Kitchen routes
@@ -71,12 +68,14 @@ Route::prefix('kitchen')->middleware('auth')->group(function () {
     Route::get('/dashboard', [KitchenDashboardController::class, 'index'])->name('kitchen.dashboard');
     Route::get('/orders/list', [KitchenOrderController::class, 'list'])->name('kitchen.orders.list');
     Route::post('/orders/{order}/status', [KitchenOrderController::class, 'updateStatus'])->name('kitchen.orders.status');
+    Route::post('/orders/{order}/mark-printed', [KitchenOrderController::class, 'markPrinted'])->name('kitchen.orders.mark-printed');
 });
 
 // Cashier routes
 Route::prefix('cashier')->middleware('auth')->group(function () {
     Route::get('/dashboard', [CashierDashboardController::class, 'index'])->name('cashier.dashboard');
     Route::get('/orders/list', [CashierOrderController::class, 'list'])->name('cashier.orders.list');
+    Route::get('/orders/recent-payments', [CashierOrderController::class, 'recentPayments'])->name('cashier.orders.recent-payments');
     Route::get('/orders/{order}', [CashierOrderController::class, 'show'])->name('cashier.orders.show');
     Route::post('/orders/{order}/payment', [CashierOrderController::class, 'processPayment'])->name('cashier.orders.payment');
 });

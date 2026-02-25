@@ -55,9 +55,17 @@
                         <td class="px-3 md:px-4 py-2 md:py-3">Rs. {{ number_format($order->total, 2) }}</td>
                         <td class="px-3 md:px-4 py-2 md:py-3 text-gray-600">{{ $order->created_at?->format('Y-m-d H:i') }}</td>
                         <td class="px-3 md:px-4 py-2 md:py-3 text-right">
-                            <a href="{{ route('admin.orders.show', $order) }}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700">
-                                View
-                            </a>
+                            <div class="flex flex-wrap justify-end gap-1">
+                                <a href="{{ route('admin.orders.show', $order) }}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('admin.orders.print-bill', $order) }}" target="_blank" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded text-xs font-medium text-blue-700" title="Print Bill">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                                <a href="{{ route('admin.orders.print-kitchen', $order) }}" target="_blank" class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 rounded text-xs font-medium text-orange-700" title="Print Kitchen Slip">
+                                    <i class="fas fa-utensils"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
