@@ -52,13 +52,13 @@
                             @foreach($category->menuItems as $item)
                             <button type="button"
                                 onclick="addToCart({{ $item->id }}, '{{ addslashes($item->name) }}', {{ $item->price }})"
-                                class="menu-item-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-blue-400 hover:shadow-md transition group"
+                                class="menu-item-btn flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-5 text-left hover:border-blue-400 hover:shadow-md transition group"
                                 data-name="{{ strtolower($item->name) }}">
                                 @if($item->image)
-                                <img src="{{ asset('storage/' . $item->image) }}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0" alt="{{ $item->name }}"> {{-- Larger images --}}
+                                <img src="{{ asset('storage/' . $item->image) }}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" alt="{{ $item->name }}"> {{-- Larger images --}}
                                 @else
-                                <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
-                                    <i class="fas fa-utensils text-blue-400 text-xl"></i> {{-- Larger icon --}}
+                                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-utensils text-blue-400 text-2xl"></i> {{-- Larger icon --}}
                                 </div>
                                 @endif
                                 <div class="flex-1 min-w-0">

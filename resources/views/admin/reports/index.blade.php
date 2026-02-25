@@ -15,6 +15,7 @@
         </a>
     </div>
 </div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
     <div class="lg:col-span-2 space-y-4 md:space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
@@ -34,12 +35,15 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 mb-3 md:mb-4">Revenue (Last 30 Days)</h2>
-            <div class="relative" style="height: 300px;">
+            <div class="relative" style="height: 300px; width: 100%;">
                 <canvas id="revenueChart"></canvas>
             </div>
+            @if(empty($revenueChart))
+                <div class="text-center py-8 text-gray-500">
+                    No revenue data available for the last 30 days
+                </div>
+            @endif
         </div>
-
-        
     </div>
 
     <div class="lg:col-span-1">
@@ -73,42 +77,124 @@
     </div>
 </div>
 
+@endsection
+
 @push('scripts')
 <script>
-const revenueData = @json($revenueChart);
-if (revenueData && revenueData.length > 0) {
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: revenueData.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-            datasets: [{
-                label: 'Revenue',
-                data: revenueData.map(item => item.revenue),
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rs. ' + value.toFixed(0);
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if Chart is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded!');
+        return;
+    }
+
+    // Get the canvas element
+    const canvas = document.getElementById('revenueChart');
+    if (!canvas) {
+        console.error('Canvas element not found!');
+        return;
+    }
+
+    // Get the context
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get canvas context!');
+        return;
+    }
+
+    // Get the data
+    const revenueData = @json($revenueChart);
+    console.log('Revenue Data:', revenueData);
+
+    // Check if data exists and is valid
+    if (!revenueData || revenueData.length === 0) {
+        console.log('No revenue data available');
+        // Show a message on the canvas
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data available', canvas.width/2, canvas.height/2);
+        return;
+    }
+
+    try {
+        // Prepare chart data
+        const labels = revenueData.map(item => {
+            const date = new Date(item.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        
+        const values = revenueData.map(item => parseFloat(item.revenue) || 0);
+        
+        console.log('Chart Labels:', labels);
+        console.log('Chart Values:', values);
+
+        // Create the chart
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue (Rs.)',
+                    data: values,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Revenue: Rs. ' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rs. ' + value.toFixed(0);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
                         }
                     }
                 }
             }
-        }
-    });
-}
+        });
+        
+        console.log('Chart created successfully!');
+    } catch (error) {
+        console.error('Error creating chart:', error);
+        // Show error on canvas
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#ff0000';
+        ctx.textAlign = 'center';
+        ctx.fillText('Error loading chart', canvas.width/2, canvas.height/2);
+    }
+});
 </script>
 @endpush
-@endsection
-

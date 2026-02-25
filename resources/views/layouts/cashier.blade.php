@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Cashier - ' . config('app.name', 'POS System'))</title>
     @vite(['resources/css/app.css', 'resources/css/responsive.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @stack('styles')
     <style>
         .sidebar { transition: transform 0.3s ease, width 0.3s ease; }
@@ -73,7 +72,6 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     @stack('scripts')
     <script>
         $(document).ready(function() {

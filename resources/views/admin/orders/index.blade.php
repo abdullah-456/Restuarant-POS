@@ -11,7 +11,7 @@
             <p class="text-sm text-gray-500">Overview of all orders in the system.</p>
         </div>
         <form method="GET" class="flex items-center gap-2">
-            <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <select name="status" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="">All Statuses</option>
                 @foreach(['draft','confirmed','preparing','ready','paid','cancelled'] as $status)
                     <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
