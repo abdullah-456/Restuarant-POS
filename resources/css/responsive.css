@@ -1,7 +1,12 @@
-/* Comprehensive Responsive Styles for POS System */
+/* ============================================================
+   Responsive Styles for Restaurant POS System
+   – Carefully scoped to avoid breaking component-level styles
+   ============================================================ */
 
-/* Base responsive utilities */
-* {
+/* Base box model */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
@@ -10,74 +15,11 @@ html {
     -ms-text-size-adjust: 100%;
 }
 
-/* Prevent horizontal scroll globally */
+/* Prevent horizontal scroll */
+html,
 body {
     overflow-x: hidden;
-    position: relative;
-    width: 100%;
-}
-
-/* Mobile First Approach */
-@media (max-width: 640px) {
-    /* Typography */
-    h1 { font-size: 1.5rem !important; }
-    h2 { font-size: 1.25rem !important; }
-    h3 { font-size: 1.125rem !important; }
-    
-    /* Cards */
-    .card, .bg-white {
-        padding: 1rem !important;
-    }
-    
-    /* Buttons */
-    button, .btn, a[class*="bg-"] {
-        padding: 0.5rem 1rem !important;
-        font-size: 0.875rem !important;
-    }
-    
-    /* Forms */
-    input, select, textarea {
-        font-size: 16px !important; /* Prevents zoom on iOS */
-        padding: 0.5rem !important;
-    }
-    
-    /* Tables */
-    table {
-        font-size: 0.75rem !important;
-    }
-    
-    /* Modals */
-    .modal-content {
-        margin: 1rem !important;
-        max-width: calc(100% - 2rem) !important;
-    }
-    
-    /* Grids */
-    .grid {
-        gap: 0.75rem !important;
-    }
-}
-
-
-
-/* Tablet */
-@media (min-width: 641px) and (max-width: 1024px) {
-    .card, .bg-white {
-        padding: 1.25rem !important;
-    }
-}
-
-/* Prevent horizontal scroll */
-html, body {
-    overflow-x: hidden;
     max-width: 100vw;
-}
-
-/* Ensure containers don't overflow */
-.container, .max-w-7xl, .max-w-4xl {
-    max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
 }
 
 /* Responsive images */
@@ -86,416 +28,92 @@ img {
     height: auto;
 }
 
-/* Responsive tables */
-@media (max-width: 768px) {
-    table {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    table thead {
-        display: none;
-    }
-    
-    table tbody tr {
-        display: block;
-        margin-bottom: 1rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-    }
-    
-    table tbody td {
-        display: block;
-        text-align: right;
-        padding: 0.5rem 0;
-        border: none;
-    }
-    
-    table tbody td::before {
-        content: attr(data-label);
-        float: left;
-        font-weight: 600;
-        color: #6b7280;
-    }
-}
-
-/* Responsive modals */
-@media (max-width: 640px) {
-    .fixed.inset-0 {
-        padding: 0.5rem;
-    }
-    
-    .modal-content, [class*="max-w-md"], [class*="max-w-lg"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        border-radius: 0.5rem !important;
-    }
-}
-
-/* Responsive sidebar */
+/* ── Sidebar (mobile) ─────────────────────────────────── */
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
         z-index: 50;
     }
-    
+
     .sidebar.mobile-open {
         transform: translateX(0);
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
     }
-    
+
     .main-content {
         margin-left: 0 !important;
         width: 100% !important;
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-    }
-    
-    /* Sidebar overlay */
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 40;
-        display: none;
-    }
-    
-    .sidebar-overlay.active {
-        display: block;
     }
 }
 
-/* Responsive top bar */
-@media (max-width: 640px) {
-    .top-bar, [class*="sticky top-0"] {
-        padding: 0.75rem 1rem !important;
-    }
-    
-    .top-bar h2 {
-        font-size: 1.125rem !important;
-    }
-}
-
-/* Responsive flex containers */
-@media (max-width: 640px) {
-    .flex {
-        flex-wrap: wrap;
-    }
-    
-    .flex-row {
-        flex-direction: column;
-    }
-    
-    .justify-between {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-}
-
-/* Responsive spacing */
-@media (max-width: 640px) {
-    .space-y-6 > * + * { margin-top: 1rem !important; }
-    .space-y-4 > * + * { margin-top: 0.75rem !important; }
-    .gap-6 { gap: 1rem !important; }
-    .gap-4 { gap: 0.75rem !important; }
-}
-
-/* Text truncation for mobile */
-@media (max-width: 640px) {
-    .truncate {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-}
-
-/* Responsive DataTables */
+/* ── DataTables responsive ────────────────────────────── */
 @media (max-width: 768px) {
     .dataTables_wrapper {
         overflow-x: auto;
     }
-    
+
     .dataTables_wrapper .dataTables_length,
     .dataTables_wrapper .dataTables_filter {
-        margin-bottom: 1rem;
+        display: block;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 0.75rem;
     }
-    
+
     .dataTables_wrapper .dataTables_length select,
     .dataTables_wrapper .dataTables_filter input {
         width: 100%;
         margin: 0.25rem 0;
     }
-}
 
-/* Touch-friendly targets */
-@media (max-width: 1024px) {
-    button, a, input[type="checkbox"], input[type="radio"] {
-        min-height: 44px;
-        min-width: 44px;
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1rem;
+        text-align: center;
+        float: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        margin-top: 1rem;
+        text-align: center;
+        float: none !important;
     }
 }
 
-/* Responsive charts */
+/* ── Prevent iOS zoom on input focus ─────────────────── */
 @media (max-width: 640px) {
-    canvas {
-        max-width: 100%;
-        height: auto !important;
-    }
-}
 
-/* Additional responsive improvements */
-
-/* Responsive form groups */
-@media (max-width: 640px) {
-    .form-group,
-    [class*="mb-4"],
-    [class*="mb-6"] {
-        margin-bottom: 1rem !important;
-    }
-    
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-size: 0.875rem;
-        width: 100%;
-    }
-    
     input[type="text"],
     input[type="number"],
     input[type="email"],
     input[type="password"],
     input[type="date"],
     input[type="time"],
+    input[type="search"],
     select,
     textarea {
-        width: 100% !important;
-        padding: 0.625rem !important;
-        font-size: 16px !important; /* Prevents iOS zoom */
-        border-radius: 0.375rem;
+        font-size: 16px !important;
     }
 }
 
-/* Responsive button groups */
-@media (max-width: 640px) {
-    .btn-group,
-    .flex.gap-2:not(.no-stack),
-    .flex.space-x-2:not(.no-stack),
-    .flex.space-x-3:not(.no-stack) {
-        flex-direction: column !important;
-        width: 100%;
-    }
-    
-    .btn-group button,
-    .flex.gap-2 button:not(.no-stack),
-    .flex.space-x-2 button:not(.no-stack),
-    .flex.space-x-3 button:not(.no-stack) {
-        width: 100% !important;
-        margin-bottom: 0.5rem;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-    
-    button:last-child,
-    .btn-group button:last-child {
-        margin-bottom: 0;
-    }
-}
-
-/* Responsive cards */
-@media (max-width: 640px) {
-    .card,
-    [class*="bg-white"].rounded-lg,
-    [class*="bg-white"].shadow-sm {
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-    }
-    
-    .card-header,
-    [class*="border-b"] {
-        padding: 0.75rem 1rem !important;
-    }
-    
-    .card-body {
-        padding: 1rem !important;
-    }
-}
-
-/* Responsive grid improvements */
-@media (max-width: 640px) {
-    [class*="grid-cols-2"]:not(.keep-cols) {
-        grid-template-columns: 1fr !important;
-    }
-    
-    [class*="grid-cols-3"]:not(.keep-cols) {
-        grid-template-columns: 1fr !important;
-    }
-    
-    [class*="grid-cols-4"]:not(.keep-cols) {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    
-    [class*="grid-cols-5"]:not(.keep-cols) {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-    [class*="grid-cols-4"]:not(.keep-cols) {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    
-    [class*="grid-cols-5"]:not(.keep-cols) {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-}
-
-/* Responsive top bar improvements */
-@media (max-width: 640px) {
-    [class*="sticky"][class*="top-0"] h2,
-    [class*="sticky"][class*="top-0"] h1,
-    .page-title {
-        font-size: 1.125rem !important;
-        line-height: 1.5;
-        word-wrap: break-word;
-    }
-    
-    [class*="sticky"][class*="top-0"] .flex {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-}
-
-/* Responsive DataTables improvements */
-@media (max-width: 768px) {
-    .dataTables_wrapper .dataTables_paginate {
-        margin-top: 1rem;
-        text-align: center;
-        float: none !important;
-    }
-    
-    .dataTables_wrapper .dataTables_info {
-        margin-top: 1rem;
-        text-align: center;
-        float: none !important;
-    }
-    
-    .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter {
-        display: block;
-        width: 100%;
-        text-align: left;
-    }
-}
-
-/* Responsive stat cards */
-@media (max-width: 640px) {
-    [class*="bg-gradient-to"] {
-        padding: 1rem !important;
-    }
-    
-    [class*="bg-gradient-to"] .text-3xl {
-        font-size: 1.75rem !important;
-    }
-    
-    [class*="bg-gradient-to"] .text-2xl {
-        font-size: 1.5rem !important;
-    }
-}
-
-/* Responsive menu items */
-@media (max-width: 640px) {
-    .menu-item,
-    [class*="menu-item"] {
-        padding: 0.75rem !important;
-    }
-    
-    .menu-item img {
-        height: 120px !important;
-    }
-}
-
-/* Responsive order cards */
-@media (max-width: 640px) {
-    [class*="order-card"],
-    [id*="order"] {
-        padding: 1rem !important;
-        margin-bottom: 1rem;
-    }
-}
-
-/* Print styles */
+/* ── Print styles ─────────────────────────────────────── */
 @media print {
+
     .sidebar,
-    .sidebar-overlay,
-    button:not(.print),
+    #sidebar-overlay,
     .no-print,
     [class*="no-print"] {
         display: none !important;
     }
-    
+
     .main-content {
         margin-left: 0 !important;
         width: 100% !important;
     }
-    
-    .card,
-    [class*="bg-white"] {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
 }
 
-/* Accessibility improvements for mobile */
-@media (max-width: 1024px) {
-    /* Ensure focus states are visible */
-    *:focus {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-    }
-    
-    /* Improve tap targets */
-    a, button, [role="button"] {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-
-/* Landscape orientation adjustments */
-@media (max-width: 1024px) and (orientation: landscape) {
-    .sidebar {
-        width: 240px;
-    }
-    
-    .main-content {
-        margin-left: 240px;
-    }
-}
-
-/* Very small screens */
-@media (max-width: 375px) {
-    .container,
-    [class*="max-w-"] {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-    }
-    
-    .card,
-    [class*="bg-white"] {
-        padding: 0.75rem !important;
-    }
-    
-    h1 { font-size: 1.25rem !important; }
-    h2 { font-size: 1.125rem !important; }
-    h3 { font-size: 1rem !important; }
+/* ── Focus ring (accessibility) – desktop-only override ─ */
+*:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }

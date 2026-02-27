@@ -9,79 +9,114 @@
     @stack('styles')
     <style>
         .sidebar { transition: transform 0.3s ease, width 0.3s ease; }
-        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed { width: 72px; }
         .sidebar.collapsed .sidebar-text { display: none; }
         .main-content { transition: margin-left 0.3s ease; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: 280px; }
             .sidebar.mobile-open { transform: translateX(0); }
             .main-content { margin-left: 0 !important; }
-            .sidebar-overlay { display: none; }
-            .sidebar-overlay.active { display: block; }
         }
+        .nav-link { display: flex; align-items: center; padding: 0.6rem 0.75rem; margin: 0 0.5rem; border-radius: 0.5rem; color: rgba(255,255,255,0.75); transition: all 0.2s; font-size: 0.875rem; font-weight: 500; }
+        .nav-link:hover { background: rgba(255,255,255,0.12); color: white; }
+        .nav-link.active { background: rgba(255,255,255,0.18); color: white; box-shadow: inset 3px 0 0 #fb923c; }
+        .nav-link i { width: 1.5rem; text-align: center; flex-shrink: 0; }
+        .nav-link .sidebar-text { margin-left: 0.75rem; }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="sidebar-overlay fixed inset-0 bg-black bg-opacity-50 z-40 hidden" id="sidebar-overlay"></div>
-    <div class="sidebar fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-lg z-50" id="sidebar">
-        <div class="p-4 md:p-6 border-b border-blue-700">
+    <div class="fixed inset-0 bg-black/50 z-40 hidden" id="sidebar-overlay"></div>
+    <div class="sidebar fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-2xl z-50 flex flex-col" id="sidebar">
+        <div class="px-4 py-5 border-b border-white/10 flex-shrink-0">
             <div class="flex items-center justify-between">
-                <h1 class="text-lg md:text-xl font-bold sidebar-text">POS · Kitchen</h1>
-                <button id="sidebar-toggle" class="text-white hover:text-blue-200 md:hidden"><i class="fas fa-times"></i></button>
-                <button id="sidebar-toggle-desktop" class="text-white hover:text-blue-200 hidden md:block"><i class="fas fa-bars"></i></button>
+                <div class="flex items-center gap-3 sidebar-text">
+                    <div class="w-9 h-9 bg-gradient-to-br from-orange-400 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-fire-burner text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold leading-tight">POS System</h1>
+                        <p class="text-[10px] text-white/40 uppercase tracking-widest">Kitchen</p>
+                    </div>
+                </div>
+                <button id="sidebar-toggle" class="text-white/60 hover:text-white md:hidden p-1"><i class="fas fa-times"></i></button>
+                <button id="sidebar-toggle-desktop" class="text-white/60 hover:text-white hidden md:block p-1"><i class="fas fa-bars"></i></button>
             </div>
         </div>
-        <nav class="mt-4 md:mt-6 overflow-y-auto" style="max-height: calc(100vh - 200px);">
-            <a href="{{ route('kitchen.dashboard') }}" class="flex items-center px-4 md:px-6 py-2.5 md:py-3 text-white hover:bg-blue-700 transition {{ request()->routeIs('kitchen.dashboard') ? 'bg-blue-700 border-r-4 border-yellow-400' : '' }}">
-                <i class="fas fa-fire-alt w-6"></i>
-                <span class="ml-3 sidebar-text">Kitchen Display</span>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-0.5">
+            <div class="px-4 mb-1">
+                <p class="text-[10px] uppercase tracking-widest text-white/30 font-semibold px-2 sidebar-text">Kitchen</p>
+            </div>
+            <a href="{{ route('kitchen.dashboard') }}" class="nav-link {{ request()->routeIs('kitchen.dashboard') ? 'active' : '' }}">
+                <i class="fas fa-fire-burner"></i><span class="sidebar-text">Live Orders</span>
             </a>
         </nav>
-        <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 border-t border-blue-700">
-            <div class="flex items-center">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 rounded-full flex items-center justify-center"><i class="fas fa-user text-xs md:text-sm"></i></div>
-                <div class="ml-3 sidebar-text">
-                    <p class="text-xs md:text-sm font-semibold">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-blue-200">Kitchen</p>
+
+        <div class="flex-shrink-0 p-4 border-t border-white/10 bg-black/20">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {{ Str::upper(Str::substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div class="sidebar-text min-w-0">
+                    <p class="text-sm font-semibold truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-white/40">Kitchen Staff</p>
                 </div>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="mt-3 md:mt-4">
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition sidebar-text text-sm md:text-base">
-                    <i class="fas fa-sign-out-alt mr-2"></i><span>Logout</span>
+                <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/20 rounded-lg text-red-300 hover:text-white transition text-sm">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="sidebar-text">Logout</span>
                 </button>
             </form>
         </div>
     </div>
 
-    <div class="main-content ml-0 md:ml-64 min-h-screen">
-        <div class="bg-white shadow-sm border-b sticky top-0 z-30">
+    <div class="main-content ml-0 md:ml-64 min-h-screen flex flex-col">
+        <div class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
             <div class="px-4 md:px-6 py-3 md:py-4">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-3">
-                        <button id="mobile-menu-toggle" class="md:hidden text-gray-600 hover:text-gray-800"><i class="fas fa-bars text-xl"></i></button>
-                        <h2 class="text-lg md:text-2xl font-bold text-gray-800">@yield('page-title', 'Kitchen Display')</h2>
+                        <button id="mobile-menu-toggle" class="md:hidden text-gray-500 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <h2 class="text-lg md:text-xl font-bold text-gray-900">@yield('page-title', 'Kitchen Display')</h2>
                     </div>
-                    <span class="text-xs md:text-sm text-gray-600 hidden sm:inline">{{ now()->format('l, F d, Y H:i') }}</span>
-                    <span class="text-xs md:text-sm text-gray-600 sm:hidden">{{ now()->format('M d H:i') }}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-400 hidden sm:inline" id="kitchen-clock">{{ now()->format('H:i') }}</span>
+                        <div class="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1.5">
+                            <div class="w-5 h-5 bg-gradient-to-br from-orange-400 to-red-600 rounded-full flex items-center justify-center">
+                                <span class="text-white text-[10px] font-bold">{{ Str::upper(Str::substr(auth()->user()->name, 0, 1)) }}</span>
+                            </div>
+                            <span class="text-xs font-medium text-orange-700 hidden sm:inline">{{ auth()->user()->name }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="p-4 md:p-6">
+        <div class="flex-1 p-4 md:p-6">
             @yield('content')
         </div>
     </div>
 
-    @stack('scripts')
     <script>
+        // Live clock for kitchen
+        function updateClock() {
+            const now = new Date();
+            const el = document.getElementById('kitchen-clock');
+            if (el) {
+                el.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+        }
+        setInterval(updateClock, 1000);
+
         $(document).ready(function() {
-            // Sidebar toggles
             $('#sidebar-toggle-desktop').on('click', function() {
                 $('#sidebar').toggleClass('collapsed');
                 if ($('#sidebar').hasClass('collapsed')) {
-                    $('.main-content').removeClass('ml-64').addClass('ml-20');
+                    $('.main-content').removeClass('ml-64').addClass('ml-[72px]');
                 } else {
-                    $('.main-content').removeClass('ml-20').addClass('ml-64');
+                    $('.main-content').removeClass('ml-[72px]').addClass('ml-64');
                 }
             });
             $('#mobile-menu-toggle, #sidebar-toggle').on('click', function() {
@@ -98,25 +133,16 @@
                     $('#sidebar-overlay').addClass('hidden');
                 }
             });
-
-            // Session Messages
             @if(session('success'))
-                window.Alert.toast("{{ session('success') }}", 'success');
+                window.Alert.toast("{{ addslashes(session('success')) }}", 'success');
             @endif
             @if(session('error'))
-                window.Alert.toast("{{ session('error') }}", 'error');
-            @endif
-            @if(session('info'))
-                window.Alert.toast("{{ session('info') }}", 'info');
+                window.Alert.toast("{{ addslashes(session('error')) }}", 'error');
             @endif
         });
-
-        // Global showConfirm using SweetAlert
         window.showConfirm = function(title, message, callback) {
             window.Alert.confirm(title, message).then((result) => {
-                if (result.isConfirmed && callback) {
-                    callback();
-                }
+                if (result.isConfirmed && callback) callback();
             });
         };
     </script>

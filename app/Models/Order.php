@@ -20,7 +20,9 @@ class Order extends Model
         'notes',
         'subtotal',
         'discount_amount',
+        'service_charge_rate',
         'service_charge_amount',
+        'tax_rate',
         'tax_amount',
         'total',
         'total_paid',
@@ -28,6 +30,8 @@ class Order extends Model
         'confirmed_at',
         'ready_at',
         'paid_at',
+        'modified_at',
+        'modified_by',
     ];
 
     protected $casts = [

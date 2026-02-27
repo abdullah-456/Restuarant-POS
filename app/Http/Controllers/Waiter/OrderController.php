@@ -88,13 +88,15 @@ class OrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($request, $tableId) {
-            $subtotal = 0;
+        $order = null;
+
+        DB::transaction(function () use ($request, $tableId, &$order) {
+            $subtotal   = 0;
             $orderItems = [];
 
             foreach ($request->items as $item) {
-                $menuItem = MenuItem::findOrFail($item['menu_item_id']);
-                $quantity = (int) $item['quantity'];
+                $menuItem  = MenuItem::findOrFail($item['menu_item_id']);
+                $quantity  = (int) $item['quantity'];
                 $lineTotal = (float) $menuItem->price * $quantity;
                 $subtotal += $lineTotal;
 
@@ -111,12 +113,12 @@ class OrderController extends Controller
                 ];
             }
 
-            $taxPercent = (float) (Setting::where('key', 'tax_percent')->value('value') ?? 0);
+            $taxPercent     = (float) (Setting::where('key', 'tax_percent')->value('value') ?? 0);
             $servicePercent = (float) (Setting::where('key', 'service_charge_percent')->value('value') ?? 0);
 
-            $taxAmount = round(($subtotal * $taxPercent) / 100, 2);
+            $taxAmount     = round(($subtotal * $taxPercent) / 100, 2);
             $serviceAmount = round(($subtotal * $servicePercent) / 100, 2);
-            $total = round($subtotal + $taxAmount + $serviceAmount, 2);
+            $total         = round($subtotal + $taxAmount + $serviceAmount, 2);
 
             $todayOrderCount = Order::whereDate('created_at', today())->count();
             $orderNumber     = $todayOrderCount + 1;
@@ -151,13 +153,13 @@ class OrderController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Order created successfully.',
-                'redirect_url' => route('waiter.orders.index')
+                'success'      => true,
+                'message'      => 'Order #' . $order->order_number . ' placed successfully!',
+                'redirect_url' => route('waiter.orders.show', $order)
             ]);
         }
 
-        return redirect()->route('waiter.orders.index')->with('success', 'Order created successfully.');
+        return redirect()->route('waiter.orders.show', $order)->with('success', 'Order created successfully.');
     }
 
     public function show(Order $order)
@@ -216,6 +218,47 @@ class OrderController extends Controller
             'success' => true,
             'message' => 'Item added.',
             'print_url' => route('admin.orders.print-kitchen', $order->id)
+        ]);
+    }
+
+    public function confirm(Order $order)
+    {
+        // Ensure this waiter owns the order
+        if ($order->waiter_id !== auth()->id()) {
+            return back()->with('error', 'You are not authorized to confirm this order.');
+        }
+
+        if (!in_array($order->status, ['draft', 'pending', 'confirmed'])) {
+            return back()->with('error', 'Order cannot be confirmed at this stage.');
+        }
+
+        // If status was draft/pending, move to confirmed and mark items
+        if (in_array($order->status, ['draft', 'pending'])) {
+            $order->update(['status' => 'confirmed', 'confirmed_at' => now()]);
+        }
+
+        return back()->with('success', 'Order #' . $order->order_number . ' confirmed and sent to kitchen!');
+    }
+
+    public function removeItem(Order $order, OrderItem $item)
+    {
+        $this->authorizeOrder($order);
+
+        if (in_array($order->status, ['paid', 'cancelled', 'completed'])) {
+            return response()->json(['success' => false, 'error' => 'Order is finalized.'], 422);
+        }
+
+        // Only allow removing pending/new items (not yet sent to kitchen)
+        if ((int) $item->is_new !== 1 || $item->status !== 'pending') {
+            // Allow removal of any item that hasn't been prepared
+        }
+
+        $item->delete();
+        $this->recalculate($order);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item removed from order.'
         ]);
     }
 

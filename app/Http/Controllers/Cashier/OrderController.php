@@ -93,7 +93,7 @@ class OrderController extends Controller
             'status'           => 'paid',
             'total_paid'       => $totalDue,
             'remaining_amount' => 0,
-            // 'paid_at'          => now(),
+            'paid_at'          => now(),
         ]);
 
         // Free the table if no other active orders
