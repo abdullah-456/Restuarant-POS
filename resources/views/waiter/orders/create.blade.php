@@ -98,7 +98,7 @@
     /* ── Mobile bottom cart panel ────────────────────────────── */
     @media (max-width: 1023px) {
         /* Remove desktop cart, show mobile panel */
-        #desktop-cart { display: none !important; }
+        /* #desktop-cart { display: none !important; } */
 
         /* Reserve bottom space so content doesn't hide behind cart */
         #menu-section { padding-bottom: 0; }
@@ -112,6 +112,17 @@
             max-height: 42vh;
         }
     }
+    @media (min-width: 1024px) {
+    #desktop-cart { 
+        display: flex !important; 
+        width: 220px;
+        flex-shrink: 0;
+        height: 600px; /* Fixed height */
+        overflow: hidden;
+        align-self: flex-start;
+    }
+    /* #mobile-cart-panel { display: none !important; } */
+}
 
     @media (min-width: 1024px) {
         #desktop-cart { display: flex !important; }

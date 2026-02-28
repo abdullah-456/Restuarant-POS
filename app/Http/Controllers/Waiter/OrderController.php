@@ -43,9 +43,11 @@ class OrderController extends Controller
             ->get();
 
         $categories = \App\Models\Category::where('is_active', true)
-            ->with(['menuItems' => function ($q) {
-                $q->where('is_active', true)->orderBy('name');
-            }])
+            ->with([
+                'menuItems' => function ($q) {
+                    $q->where('is_active', true)->orderBy('name');
+                }
+            ])
             ->orderBy('name')
             ->get();
 
@@ -58,108 +60,129 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'restaurant_table_id'   => ['nullable', 'exists:restaurant_tables,id'],
-            'order_type'            => ['required', 'in:dining,takeaway,delivery'],
-            'delivery_address'      => ['required_if:order_type,delivery', 'nullable', 'string'],
-            'customer_phone'        => ['nullable', 'string', 'max:20'],
-            'items'                 => ['required', 'array', 'min:1'],
-            'items.*.menu_item_id'  => ['required', 'exists:menu_items,id'],
-            'items.*.quantity'      => ['required', 'integer', 'min:1'],
-            'items.*.notes'         => ['nullable', 'string', 'max:255'],
-            'notes'                 => ['nullable', 'string'],
-        ]);
+        try {
 
-        if ($request->order_type === 'dining' && !$request->restaurant_table_id) {
-            return back()->withErrors(['restaurant_table_id' => 'Please select a table for Dining orders.'])->withInput();
-        }
-
-        $tableId = $request->restaurant_table_id ? (int) $request->restaurant_table_id : null;
-
-        if ($tableId) {
-            $existingActive = Order::where('restaurant_table_id', $tableId)
-                ->whereNotIn('status', ['paid', 'cancelled', 'completed'])
-                ->exists();
-
-            if ($existingActive) {
-                return back()
-                    ->withErrors(['restaurant_table_id' => 'This table already has an active order.'])
-                    ->withInput();
-            }
-        }
-
-        $order = null;
-
-        DB::transaction(function () use ($request, $tableId, &$order) {
-            $subtotal   = 0;
-            $orderItems = [];
-
-            foreach ($request->items as $item) {
-                $menuItem  = MenuItem::findOrFail($item['menu_item_id']);
-                $quantity  = (int) $item['quantity'];
-                $lineTotal = (float) $menuItem->price * $quantity;
-                $subtotal += $lineTotal;
-
-                $orderItems[] = [
-                    'menu_item_id' => $menuItem->id,
-                    'item_name'    => $menuItem->name,
-                    'item_price'   => $menuItem->price,
-                    'quantity'     => $quantity,
-                    'notes'        => $item['notes'] ?? null,
-                    'subtotal'     => $lineTotal,
-                    'is_new'       => 1,
-                    'status'       => 'confirmed',
-                    'added_at'     => now(),
-                ];
-            }
-
-            $taxPercent     = (float) (Setting::where('key', 'tax_percent')->value('value') ?? 0);
-            $servicePercent = (float) (Setting::where('key', 'service_charge_percent')->value('value') ?? 0);
-
-            $taxAmount     = round(($subtotal * $taxPercent) / 100, 2);
-            $serviceAmount = round(($subtotal * $servicePercent) / 100, 2);
-            $total         = round($subtotal + $taxAmount + $serviceAmount, 2);
-
-            $todayOrderCount = Order::whereDate('created_at', today())->count();
-            $orderNumber     = $todayOrderCount + 1;
-
-            $order = Order::create([
-                'order_number'          => (string) $orderNumber,
-                'restaurant_table_id'   => $tableId,
-                'waiter_id'             => auth()->id(),
-                'order_type'            => $request->order_type,
-                'delivery_address'      => $request->delivery_address,
-                'customer_phone'        => $request->customer_phone,
-                'status'                => 'confirmed',
-                'confirmed_at'          => now(),
-                'notes'                 => $request->notes,
-                'subtotal'              => $subtotal,
-                'tax_rate'              => $taxPercent,
-                'tax_amount'            => $taxAmount,
-                'service_charge_rate'   => $servicePercent,
-                'service_charge_amount' => $serviceAmount,
-                'total'                 => $total,
-                'remaining_amount'      => $total,
+            $validated = $request->validate([
+                'restaurant_table_id' => ['nullable', 'exists:restaurant_tables,id'],
+                'order_type' => ['required', 'in:dining,takeaway,delivery'],
+                'delivery_address' => ['required_if:order_type,delivery', 'nullable', 'string'],
+                'customer_phone' => ['nullable', 'string', 'max:20'],
+                'items' => ['required', 'array', 'min:1'],
+                'items.*.menu_item_id' => ['required', 'exists:menu_items,id'],
+                'items.*.quantity' => ['required', 'integer', 'min:1'],
+                'items.*.notes' => ['nullable', 'string', 'max:255'],
+                'notes' => ['nullable', 'string'],
             ]);
 
-            foreach ($orderItems as $itemData) {
-                $order->items()->create($itemData);
+            if ($validated['order_type'] === 'dining' && empty($validated['restaurant_table_id'])) {
+                return response()->json([
+                    'message' => 'Please select a table for Dining orders.'
+                ], 422);
             }
 
-            if ($tableId && $request->order_type === 'dining') {
-                $order->table()->update(['status' => 'occupied']);
-            }
-        });
+            $tableId = $validated['restaurant_table_id'] ?? null;
 
-        if ($request->ajax()) {
+            if ($tableId) {
+                $existingActive = Order::where('restaurant_table_id', $tableId)
+                    ->whereNotIn('status', ['paid', 'cancelled', 'completed'])
+                    ->exists();
+
+                if ($existingActive) {
+                    return response()->json([
+                        'message' => 'This table already has an active order.'
+                    ], 422);
+                }
+            }
+
+            $order = null;
+
+            DB::transaction(function () use ($validated, $tableId, &$order) {
+
+                $subtotal = 0;
+                $orderItems = [];
+
+                foreach ($validated['items'] as $item) {
+
+                    $menuItem = MenuItem::findOrFail($item['menu_item_id']);
+                    $quantity = (int) $item['quantity'];
+                    $lineTotal = $menuItem->price * $quantity;
+
+                    $subtotal += $lineTotal;
+
+                    $orderItems[] = [
+                        'menu_item_id' => $menuItem->id,
+                        'item_name' => $menuItem->name,
+                        'item_price' => $menuItem->price,
+                        'quantity' => $quantity,
+                        'notes' => $item['notes'] ?? null,
+                        'subtotal' => $lineTotal,
+                        'is_new' => 1,
+                        'status' => 'confirmed',
+                        'added_at' => now(),
+                    ];
+                }
+
+                // Tax & Service
+                $taxPercent = (float) (Setting::where('key', 'tax_percent')->value('value') ?? 0);
+                $servicePercent = (float) (Setting::where('key', 'service_charge_percent')->value('value') ?? 0);
+
+                $taxAmount = round(($subtotal * $taxPercent) / 100, 2);
+                $serviceAmount = round(($subtotal * $servicePercent) / 100, 2);
+                $total = round($subtotal + $taxAmount + $serviceAmount, 2);
+
+                // ✅ SAFE order number generation
+                $lastNumber = Order::max('order_number');
+                $nextOrderNumber = ((int) $lastNumber) + 1;
+
+                $order = Order::create([
+                    'order_number' => $nextOrderNumber,
+                    'restaurant_table_id' => $tableId,
+                    'waiter_id' => auth()->id(),
+                    'order_type' => $validated['order_type'],
+                    'delivery_address' => $validated['delivery_address'] ?? null,
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                    'notes' => $validated['notes'] ?? null,
+                    'subtotal' => $subtotal,
+                    'tax_rate' => $taxPercent,
+                    'tax_amount' => $taxAmount,
+                    'service_charge_rate' => $servicePercent,
+                    'service_charge_amount' => $serviceAmount,
+                    'total' => $total,
+                    'remaining_amount' => $total,
+                ]);
+
+                foreach ($orderItems as $itemData) {
+                    $order->items()->create($itemData);
+                }
+
+                if ($tableId && $validated['order_type'] === 'dining') {
+                    $order->table()->update(['status' => 'occupied']);
+                }
+            });
+
             return response()->json([
-                'success'      => true,
-                'message'      => 'Order #' . $order->order_number . ' placed successfully!',
+                'success' => true,
+                'message' => 'Order #' . $order->order_number . ' placed successfully!',
                 'redirect_url' => route('waiter.orders.show', $order)
             ]);
-        }
 
-        return redirect()->route('waiter.orders.show', $order)->with('success', 'Order created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 500);
+        }
     }
 
     public function show(Order $order)
@@ -167,9 +190,11 @@ class OrderController extends Controller
         $this->authorizeOrder($order);
         $order->load(['table', 'waiter', 'items']);
         $categories = \App\Models\Category::where('is_active', true)
-            ->with(['menuItems' => function ($q) {
-                $q->where('is_active', true)->orderBy('name');
-            }])
+            ->with([
+                'menuItems' => function ($q) {
+                    $q->where('is_active', true)->orderBy('name');
+                }
+            ])
             ->orderBy('name')
             ->get();
         return view('waiter.orders.show', compact('order', 'categories'));
@@ -178,42 +203,42 @@ class OrderController extends Controller
     public function addItem(Request $request, Order $order)
     {
         $this->authorizeOrder($order);
-    
+
         if (in_array($order->status, ['paid', 'cancelled', 'completed'])) {
             return response()->json(['success' => false, 'error' => 'Order is finalized.'], 422);
         }
-    
+
         $request->validate([
             'menu_item_id' => ['required', 'exists:menu_items,id'],
-            'quantity'     => ['required', 'integer', 'min:1'],
-            'notes'        => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:255'],
         ]);
-    
+
         DB::transaction(function () use ($request, $order) {
             $menuItem = MenuItem::findOrFail($request->menu_item_id);
-            $qty      = (int) $request->quantity;
-            $line     = $menuItem->price * $qty;
-    
+            $qty = (int) $request->quantity;
+            $line = $menuItem->price * $qty;
+
             $order->items()->create([
                 'menu_item_id' => $menuItem->id,
-                'item_name'    => $menuItem->name,
-                'item_price'   => $menuItem->price,
-                'quantity'     => $qty,
-                'notes'        => $request->notes,
-                'subtotal'     => $line,
-                'is_new'       => 1,
-                'added_at'     => now(),
-                'status'       => 'confirmed',
+                'item_name' => $menuItem->name,
+                'item_price' => $menuItem->price,
+                'quantity' => $qty,
+                'notes' => $request->notes,
+                'subtotal' => $line,
+                'is_new' => 1,
+                'added_at' => now(),
+                'status' => 'confirmed',
             ]);
-    
-            $order->update([
-                'modified_at' => now(),
-                'modified_by' => auth()->id(),
-            ]);
-    
+
+            // $order->update([
+            //     'modified_at' => now(),
+            //     'modified_by' => auth()->id(),
+            // ]);
+
             $this->recalculate($order);
         });
-    
+
         return response()->json([
             'success' => true,
             'message' => 'Item added.',
@@ -291,11 +316,11 @@ class OrderController extends Controller
         $total = round($subtotal + $taxAmount + $serviceAmount, 2);
 
         $order->update([
-            'subtotal'              => $subtotal,
-            'tax_amount'            => $taxAmount,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
             'service_charge_amount' => $serviceAmount,
-            'total'                 => $total,
-            'remaining_amount'      => $total - $order->total_paid,
+            'total' => $total,
+            'remaining_amount' => $total - $order->total_paid,
         ]);
     }
 }
