@@ -9,17 +9,23 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class OrdersExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $date;
+    protected $startDate;
+    protected $endDate;
 
-    public function __construct($date = null)
+    public function __construct($startDate = null, $endDate = null)
     {
-        $this->date = $date ?: now()->toDateString();
+        $this->startDate = $startDate ?: now()->toDateString();
+        $this->endDate = $endDate ?: now()->toDateString();
     }
 
     public function collection()
     {
         return Order::with(['table', 'waiter'])
-            ->whereDate('created_at', $this->date)
+            ->where('status', 'paid')
+            ->whereBetween('created_at', [
+                \Carbon\Carbon::parse($this->startDate)->startOfDay(),
+                \Carbon\Carbon::parse($this->endDate)->endOfDay()
+            ])
             ->get();
     }
 

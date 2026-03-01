@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Invoice - {{ $order->order_number }}</title>
     <style>
-        @page { size: 80mm auto; margin: 0; }
-        * { box-sizing: border-box; }
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Courier New', Courier, monospace;
             width: 80mm;
@@ -14,30 +22,101 @@
             line-height: 1.4;
             color: #000;
         }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .bold { font-weight: bold; }
-        .dashed { border-bottom: 1px dashed #000; margin: 5px 0; }
-        .double { border-bottom: 3px double #000; margin: 6px 0; }
-        .header-name { font-size: 15px; font-weight: bold; letter-spacing: 1px; }
-        .invoice-label { font-size: 12px; font-weight: bold; margin: 8px 0 4px; text-decoration: underline; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; border-bottom: 1px dashed #000; padding: 3px 0 5px; font-size: 10px; text-transform: uppercase; }
-        td { padding: 2px 0; vertical-align: top; font-size: 11px; }
-        .row { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
-        .row-label { flex: 1; text-align: right; }
-        .row-value { width: 70px; text-align: right; flex-shrink: 0; }
-        .no-print { display: block; }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .dashed {
+            border-bottom: 1px dashed #000;
+            margin: 5px 0;
+        }
+
+        .double {
+            border-bottom: 3px double #000;
+            margin: 6px 0;
+        }
+
+        .header-name {
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .invoice-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 8px 0 4px;
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            border-bottom: 1px dashed #000;
+            padding: 3px 0 5px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 2px 0;
+            vertical-align: top;
+            font-size: 11px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .row-label {
+            flex: 1;
+            text-align: right;
+        }
+
+        .row-value {
+            width: 70px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .no-print {
+            display: block;
+        }
+
         @media print {
-            .no-print { display: none; }
+            .no-print {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="no-print" style="background:#f5f5f5; padding:10px; margin-bottom:15px; text-align:center; border-radius:4px;">
-        <button onclick="window.print()" style="padding:8px 20px; font-weight:bold; cursor:pointer; background:#333; color:white; border:none; border-radius:4px;">🖨️ PRINT INVOICE</button>
+    <div class="no-print"
+        style="background:#f5f5f5; padding:10px; margin-bottom:15px; text-align:center; border-radius:4px;">
+        <button onclick="window.print()"
+            style="padding:8px 20px; font-weight:bold; cursor:pointer; background:#333; color:white; border:none; border-radius:4px;">🖨️
+            PRINT INVOICE</button>
         &nbsp;
-        <button onclick="window.close()" style="padding:8px 16px; cursor:pointer; background:#888; color:white; border:none; border-radius:4px;">✕ Close</button>
+        <button onclick="window.close()"
+            style="padding:8px 16px; cursor:pointer; background:#888; color:white; border:none; border-radius:4px;">✕
+            Close</button>
     </div>
 
     <div class="text-center">
@@ -71,11 +150,11 @@
         </thead>
         <tbody>
             @foreach($order->items as $item)
-            <tr>
-                <td>{{ $item->item_name }}</td>
-                <td style="text-align:center;">{{ $item->quantity }}</td>
-                <td style="text-align:right;">{{ number_format($item->subtotal, 2) }}</td>
-            </tr>
+                <tr>
+                    <td>{{ $item->item_name }}</td>
+                    <td style="text-align:center;">{{ $item->quantity }}</td>
+                    <td style="text-align:right;">{{ number_format($item->subtotal, 2) }}</td>
+                </tr>
             @endforeach
         </tbody>
     </table>
@@ -94,7 +173,8 @@
     @endif
 
     @if($order->tax_amount > 0)
-        @php $halfTax = $order->tax_amount / 2; $taxRate = $order->tax_rate ?? 0; @endphp
+        @php $halfTax = $order->tax_amount / 2;
+        $taxRate = $order->tax_rate ?? 0; @endphp
         @if($taxRate > 0)
             <div class="row" style="font-size:9px;">
                 <div class="row-label">CGST @ {{ $taxRate / 2 }}%</div>
@@ -123,8 +203,8 @@
         @php
             preg_match('/Tendered: Rs\. ([\d.]+)/', $p->notes ?? '', $matchT);
             preg_match('/Change: Rs\. ([\d.]+)/', $p->notes ?? '', $matchC);
-            $tendered = isset($matchT[1]) ? (float)$matchT[1] : $p->amount;
-            $change   = isset($matchC[1]) ? (float)$matchC[1] : 0;
+            $tendered = isset($matchT[1]) ? (float) $matchT[1] : $p->amount;
+            $change = isset($matchC[1]) ? (float) $matchC[1] : 0;
         @endphp
         <div class="row">
             <div class="row-label">Tendered ({{ strtoupper($p->payment_method) }})</div>
@@ -144,12 +224,10 @@
     </div>
 
     <script>
-        window.onload = function() {
-            if (!window.location.search.includes('no_auto')) {
-                setTimeout(() => window.print(), 500);
-            }
+        window.onload = function () {
+            window.electronAPI.printCashier();
         }
     </script>
 </body>
-</html>
 
+</html>

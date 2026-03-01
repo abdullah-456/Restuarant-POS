@@ -39,12 +39,21 @@ class OrderController extends Controller
     public function printKitchen(Order $order, Request $request)
     {
         $order->load(['table', 'items']);
+
         if ($request->has('new_only')) {
-            $order->setRelation('items', $order->items->where('is_new', 1));
+            $newItems = $order->items->where('is_new', 1);
+            if ($newItems->isEmpty()) {
+                return "No new items to print.";
+            }
+            $order->setRelation('items', $newItems);
+
+            // Mark these items as no longer new since they are now being printed
+            \App\Models\OrderItem::whereIn('id', $newItems->pluck('id'))->update(['is_new' => 0]);
+        } else {
+            // If printing the whole order, mark all as printed
+            $order->items()->update(['is_new' => 0]);
         }
-        if ($order->items->isEmpty()) {
-            return "No new items to print.";
-        }
+
         return view('admin.orders.print_kitchen', compact('order'));
     }
 

@@ -248,21 +248,33 @@ class OrderController extends Controller
 
     public function confirm(Order $order)
     {
-        // Ensure this waiter owns the order
-        if ($order->waiter_id !== auth()->id()) {
-            return back()->with('error', 'You are not authorized to confirm this order.');
+        $this->authorizeOrder($order);
+
+        // If the order has new items that need to be sent to kitchen
+        $newItemsCount = $order->items()->where('is_new', 1)->count();
+
+        if ($newItemsCount > 0) {
+            // Mark items as no longer 'new' after we trigger the print
+            // Wait, we should probably mark them after printing, but since it's a web print, 
+            // we'll trigger the print and mark them now so they don't show as new anymore.
+
+            if (in_array($order->status, ['draft', 'pending'])) {
+                $order->update(['status' => 'confirmed', 'confirmed_at' => now()]);
+            }
+
+            // We use the session to trigger the print in the view
+            return back()->with('success', 'Sent ' . $newItemsCount . ' new item(s) to kitchen!')
+                ->with('print_order_id', $order->id)
+                ->with('print_new_only', 1);
         }
 
-        if (!in_array($order->status, ['draft', 'pending', 'confirmed'])) {
-            return back()->with('error', 'Order cannot be confirmed at this stage.');
-        }
-
-        // If status was draft/pending, move to confirmed and mark items
         if (in_array($order->status, ['draft', 'pending'])) {
             $order->update(['status' => 'confirmed', 'confirmed_at' => now()]);
+            return back()->with('success', 'Order #' . $order->order_number . ' confirmed and sent to kitchen!')
+                ->with('print_order_id', $order->id);
         }
 
-        return back()->with('success', 'Order #' . $order->order_number . ' confirmed and sent to kitchen!');
+        return back()->with('info', 'Order is already confirmed.');
     }
 
     public function removeItem(Order $order, OrderItem $item)

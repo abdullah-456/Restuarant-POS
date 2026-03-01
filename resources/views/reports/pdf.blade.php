@@ -1,21 +1,50 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Daily Sales Report</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { bg-color: #f2f2f2; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .summary { margin-top: 30px; }
-        .total { font-weight: bold; }
+        body {
+            font-family: sans-serif;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            bg-color: #f2f2f2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .summary {
+            margin-top: 30px;
+        }
+
+        .total {
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
     <div class="header">
-        <h1>Daily Sales Report</h1>
-        <p>Date: {{ $date }}</p>
+        <h1>Sales Report</h1>
+        <p>Range: {{ $startDate }} to {{ $endDate }}</p>
     </div>
 
     <table>
@@ -46,4 +75,5 @@
         <p>Total Orders: {{ $orders->count() }}</p>
     </div>
 </body>
+
 </html>
