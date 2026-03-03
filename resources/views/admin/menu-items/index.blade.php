@@ -10,10 +10,16 @@
                 <h2 class="text-lg md:text-xl font-semibold text-gray-800">Menu Items</h2>
                 <p class="text-sm text-gray-500">Manage all items available for ordering.</p>
             </div>
-            <a href="{{ route('admin.menu-items.create') }}"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm md:text-base shadow-sm hover:bg-blue-700 transition">
-                <i class="fas fa-plus mr-2"></i>Add Menu Item
-            </a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.menu-items.create-deal') }}"
+                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm md:text-base shadow-sm hover:bg-emerald-700 transition font-bold">
+                    <i class="fas fa-handshake mr-2"></i>Create a Deal
+                </a>
+                <a href="{{ route('admin.menu-items.create') }}"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm md:text-base shadow-sm hover:bg-blue-700 transition font-bold">
+                    <i class="fas fa-plus mr-2"></i>Add Menu Item
+                </a>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -37,7 +43,13 @@
                                             class="w-10 h-10 rounded object-cover hidden sm:block">
                                     @endif
                                     <div>
-                                        <p class="font-medium text-gray-800">{{ $item->name }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium text-gray-800">{{ $item->name }}</p>
+                                            @if($item->is_deal)
+                                                <span
+                                                    class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Deal</span>
+                                            @endif
+                                        </div>
                                         @if($item->description)
                                             <p class="text-xs text-gray-500 truncate max-w-xs">{{ $item->description }}</p>
                                         @endif
@@ -57,10 +69,17 @@
                             </td>
                             <td class="px-3 md:px-4 py-2 md:py-3 text-right">
                                 <div class="inline-flex gap-2">
-                                    <a href="{{ route('admin.menu-items.edit', $item) }}"
-                                        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700">
-                                        Edit
-                                    </a>
+                                    @if($item->is_deal)
+                                        <a href="{{ route('admin.menu-items.edit-deal', $item) }}"
+                                            class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded text-xs font-medium text-blue-700 transition">
+                                            Edit
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.menu-items.edit', $item) }}"
+                                            class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700 transition">
+                                            Edit
+                                        </a>
+                                    @endif
                                     <form id="del-item-{{ $item->id }}" action="{{ route('admin.menu-items.destroy', $item) }}"
                                         method="POST" style="display:none;">
                                         @csrf
@@ -68,7 +87,7 @@
                                     </form>
                                     <button type="button"
                                         onclick="showConfirm('Delete Menu Item', 'Delete \'{{ addslashes($item->name) }}\'? This cannot be undone.', function(){ document.getElementById('del-item-{{ $item->id }}').submit(); })"
-                                        class="px-3 py-1.5 bg-red-100 hover:bg-red-200 rounded text-xs font-medium text-red-700">
+                                        class="px-3 py-1.5 bg-red-100 hover:bg-red-200 rounded text-xs font-medium text-red-700 transition">
                                         Delete
                                     </button>
                                 </div>

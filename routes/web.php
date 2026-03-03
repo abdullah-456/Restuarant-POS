@@ -35,6 +35,8 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::resource('tables', TableController::class)->names('admin.tables')->except('show');
     Route::resource('categories', CategoryController::class)->names('admin.categories')->except('show');
     Route::resource('menu-items', MenuItemController::class)->names('admin.menu-items')->except('show');
+    Route::get('/menu-items/create-deal', [MenuItemController::class, 'createDeal'])->name('admin.menu-items.create-deal');
+    Route::get('/menu-items/{menu_item}/edit-deal', [MenuItemController::class, 'editDeal'])->name('admin.menu-items.edit-deal');
 
     Route::resource('orders', AdminOrderController::class)->names('admin.orders')->only(['index', 'show']);
     Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
@@ -77,5 +79,7 @@ Route::prefix('cashier')->middleware('auth')->group(function () {
     Route::get('/orders/list', [CashierOrderController::class, 'list'])->name('cashier.orders.list');
     Route::get('/orders/recent-payments', [CashierOrderController::class, 'recentPayments'])->name('cashier.orders.recent-payments');
     Route::get('/orders/{order}', [CashierOrderController::class, 'show'])->name('cashier.orders.show');
+    Route::put('/orders/{order}/item/{item}', [CashierOrderController::class, 'updateItem'])->name('cashier.orders.update-item');
+    Route::delete('/orders/{order}/item/{item}', [CashierOrderController::class, 'removeItem'])->name('cashier.orders.remove-item');
     Route::post('/orders/{order}/payment', [CashierOrderController::class, 'processPayment'])->name('cashier.orders.payment');
 });

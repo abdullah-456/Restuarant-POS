@@ -38,7 +38,7 @@ class OrderController extends Controller
 
     public function printKitchen(Order $order, Request $request)
     {
-        $order->load(['table', 'items']);
+        $order->load(['table', 'items.menuItem.dealItems.menuItem']);
 
         if ($request->has('new_only')) {
             $newItems = $order->items->where('is_new', 1);
@@ -59,7 +59,7 @@ class OrderController extends Controller
 
     public function printBill(Order $order)
     {
-        $order->load(['table', 'waiter', 'items', 'payments']);
+        $order->load(['table', 'waiter', 'items.menuItem.dealItems.menuItem', 'payments']);
         return view('admin.orders.print_bill', compact('order'));
     }
 }

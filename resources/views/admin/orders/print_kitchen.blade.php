@@ -90,10 +90,22 @@
         <tbody>
             @foreach($order->items as $item)
                 <tr>
-                    <td class="bold" style="font-size: 18px; width: 20%;">{{ $item->quantity }} x</td>
+                    <td class="bold" style="font-size: 18px; width: 20%; vertical-align: top;">{{ $item->quantity }} x</td>
                     <td>
                         @if($item->is_new) <span class="new-tag bold">NEW</span> @endif
-                        <span class="bold" style="font-size: 16px;">{{ $item->item_name }}</span>
+
+                        @if($item->menuItem && $item->menuItem->is_deal)
+                            <div class="bold" style="font-size: 16px; margin-bottom: 5px;">{{ $item->item_name }}</div>
+                            <div style="font-size: 14px; margin-left: 10px;">
+                                <div class="bold" style="text-decoration: underline; margin-bottom: 2px;">CONSTITUENTS:</div>
+                                @foreach($item->menuItem->dealItems as $di)
+                                    <div>- {{ $di->quantity * $item->quantity }}x {{ $di->menuItem->name }}</div>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="bold" style="font-size: 16px;">{{ $item->item_name }}</span>
+                        @endif
+
                         @if($item->notes) <span class="notes">*** {{ $item->notes }} ***</span> @endif
                     </td>
                 </tr>

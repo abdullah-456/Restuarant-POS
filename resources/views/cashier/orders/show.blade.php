@@ -35,17 +35,47 @@
                         <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-500">
                             <th class="px-3 py-2">Item</th>
                             <th class="px-3 py-2 text-center">Qty</th>
-                            <th class="px-3 py-2 text-right">Unit</th>
+                            <th class="px-3 py-2 text-right">Price</th>
                             <th class="px-3 py-2 text-right">Total</th>
+                            <th class="px-3 py-2 text-center"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50">
+                    <tbody class="divide-y divide-gray-50" id="itemsTableBody">
                         @foreach($order->items as $item)
-                            <tr>
-                                <td class="px-3 py-2.5 text-gray-800">{{ $item->item_name }}</td>
-                                <td class="px-3 py-2.5 text-center text-gray-600">{{ $item->quantity }}</td>
+                            <tr id="item-row-{{ $item->id }}">
+                                <td class="px-3 py-2.5 text-gray-800">
+                                    <div class="font-medium text-gray-900">{{ $item->item_name }}</div>
+                                    @if($item->menuItem && $item->menuItem->is_deal)
+                                        <div id="constituents-{{ $item->id }}" class="text-[10px] text-gray-500 mt-0.5 italic">
+                                            (
+                                            @foreach($item->menuItem->dealItems as $di)
+                                                <span data-base-qty="{{ $di->quantity }}">{{ $di->quantity * $item->quantity }}</span>x {{ $di->menuItem->name }}{{ !$loop->last ? ', ' : '' }}
+                                            @endforeach
+                                            )
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2.5">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button type="button" onclick="updateQty({{ $item->id }}, -1)"
+                                            class="w-7 h-7 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+                                            <i class="fas fa-minus text-[10px]"></i>
+                                        </button>
+                                        <span id="qty-{{ $item->id }}" class="w-6 text-center font-bold text-gray-800">{{ $item->quantity }}</span>
+                                        <button type="button" onclick="updateQty({{ $item->id }}, 1)"
+                                            class="w-7 h-7 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+                                            <i class="fas fa-plus text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </td>
                                 <td class="px-3 py-2.5 text-right text-gray-600">Rs. {{ number_format($item->item_price, 2) }}</td>
-                                <td class="px-3 py-2.5 text-right font-medium text-gray-800">Rs. {{ number_format($item->item_price * $item->quantity, 2) }}</td>
+                                <td class="px-3 py-2.5 text-right font-medium text-gray-800" id="subtotal-{{ $item->id }}">Rs. {{ number_format($item->subtotal, 2) }}</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button type="button" onclick="removeItem({{ $item->id }})"
+                                        class="text-red-400 hover:text-red-600 p-1.5 transition">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -56,29 +86,29 @@
             <div class="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
                 <div class="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span>Rs. {{ number_format($order->subtotal, 2) }}</span>
+                    <span id="label-subtotal">Rs. {{ number_format($order->subtotal, 2) }}</span>
                 </div>
                 @if($order->discount_amount > 0)
                     <div class="flex justify-between text-red-600">
                         <span>Discount</span>
-                        <span>-Rs. {{ number_format($order->discount_amount, 2) }}</span>
+                        <span id="label-discount">-Rs. {{ number_format($order->discount_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->service_charge_amount > 0)
                     <div class="flex justify-between text-gray-600">
-                        <span>Service Charge</span>
-                        <span>Rs. {{ number_format($order->service_charge_amount, 2) }}</span>
+                        <span>Service Charge ({{ number_format($order->service_charge_rate) }}%)</span>
+                        <span id="label-service">Rs. {{ number_format($order->service_charge_amount, 2) }}</span>
                     </div>
                 @endif
                 @if($order->tax_amount > 0)
                     <div class="flex justify-between text-gray-600">
-                        <span>Tax</span>
-                        <span>Rs. {{ number_format($order->tax_amount, 2) }}</span>
+                        <span>Tax ({{ number_format($order->tax_rate) }}%)</span>
+                        <span id="label-tax">Rs. {{ number_format($order->tax_amount, 2) }}</span>
                     </div>
                 @endif
                 <div class="flex justify-between font-bold text-xl text-gray-900 border-t border-gray-200 pt-2 mt-2">
                     <span>Amount Due</span>
-                    <span class="text-green-600">Rs. {{ number_format($order->total, 2) }}</span>
+                    <span class="text-green-600" id="label-total">Rs. {{ number_format($order->total, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -225,7 +255,98 @@ document.getElementById('paymentForm').addEventListener('submit', function(e) {
 
 @push('scripts')
 <script>
-const ORDER_TOTAL = {{ $order->total }};
+let ORDER_TOTAL = {{ $order->total }};
+
+function updateQty(itemId, delta) {
+    const qtySpan = document.getElementById(`qty-${itemId}`);
+    let newQty = parseInt(qtySpan.textContent) + delta;
+    if (newQty < 1) return;
+
+    fetch(`{{ route('cashier.orders.update-item', [$order->id, ':item']) }}`.replace(':item', itemId), {
+        method: 'PUT',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ quantity: newQty })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            updateUI(data.order);
+        } else {
+            window.Alert.error(data.message);
+        }
+    })
+    .catch(err => window.Alert.error('Failed to update quantity'));
+}
+
+function removeItem(itemId) {
+    window.Alert.confirm('Remove Item', 'Are you sure you want to remove this item from the bill?').then((result) => {
+        if (result.isConfirmed) {
+            fetch(`{{ route('cashier.orders.remove-item', [$order->id, ':item']) }}`.replace(':item', itemId), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        document.getElementById(`item-row-${itemId}`).remove();
+                        updateUI(data.order);
+                    }
+                } else {
+                    window.Alert.error(data.message);
+                }
+            });
+        }
+    });
+}
+
+function updateUI(order) {
+    ORDER_TOTAL = parseFloat(order.total);
+    
+    // Update labels
+    document.getElementById('label-subtotal').textContent = 'Rs. ' + parseFloat(order.subtotal).toLocaleString(undefined, {minimumFractionDigits: 2});
+    document.getElementById('label-total').textContent = 'Rs. ' + ORDER_TOTAL.toLocaleString(undefined, {minimumFractionDigits: 2});
+    
+    if (document.getElementById('label-tax')) {
+        document.getElementById('label-tax').textContent = 'Rs. ' + parseFloat(order.tax_amount).toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+    if (document.getElementById('label-service')) {
+        document.getElementById('label-service').textContent = 'Rs. ' + parseFloat(order.service_charge_amount).toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+    if (document.getElementById('label-discount')) {
+        document.getElementById('label-discount').textContent = '-Rs. ' + parseFloat(order.discount_amount).toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    // Update item row subtotals and qties
+    order.items.forEach(item => {
+        const qtySpan = document.getElementById(`qty-${item.id}`);
+        const subtotalSpan = document.getElementById(`subtotal-${item.id}`);
+        if (qtySpan) qtySpan.textContent = item.quantity;
+        if (subtotalSpan) subtotalSpan.textContent = 'Rs. ' + parseFloat(item.subtotal).toLocaleString(undefined, {minimumFractionDigits: 2});
+        
+        // Update deal constituents if they exist
+        const constituentsDiv = document.getElementById(`constituents-${item.id}`);
+        if (constituentsDiv) {
+            constituentsDiv.querySelectorAll('span[data-base-qty]').forEach(span => {
+                const baseQty = parseInt(span.getAttribute('data-base-qty'));
+                span.textContent = baseQty * item.quantity;
+            });
+        }
+    });
+
+    // Update payment form
+    document.getElementById('amountTendered').value = ORDER_TOTAL.toFixed(2);
+    calcChange();
+}
 
 function calcChange() {
     const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;

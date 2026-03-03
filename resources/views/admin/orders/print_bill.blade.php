@@ -151,7 +151,18 @@
         <tbody>
             @foreach($order->items as $item)
                 <tr>
-                    <td>{{ $item->item_name }}</td>
+                    <td>
+                        {{ $item->item_name }}
+                        @if($item->menuItem && $item->menuItem->is_deal)
+                            <div style="font-size: 9px; color: #555; margin-top: 2px;">
+                                (
+                                @foreach($item->menuItem->dealItems as $di)
+                                    {{ $di->quantity * $item->quantity }}x {{ $di->menuItem->name }}{{ !$loop->last ? ', ' : '' }}
+                                @endforeach
+                                )
+                            </div>
+                        @endif
+                    </td>
                     <td style="text-align:center;">{{ $item->quantity }}</td>
                     <td style="text-align:right;">{{ number_format($item->subtotal, 2) }}</td>
                 </tr>

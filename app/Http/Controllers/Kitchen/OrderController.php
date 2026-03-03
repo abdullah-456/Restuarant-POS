@@ -12,31 +12,36 @@ class OrderController extends Controller
     {
         $orders = Order::whereDate('created_at', today())
             ->whereIn('status', ['confirmed', 'preparing', 'ready', 'paid'])
-            ->with(['table', 'items'])
+            ->with(['table', 'items.menuItem.dealItems.menuItem'])
             ->latest()
             ->get()
             ->map(function ($order) {
                 $hasNew = $order->items->where('is_new', 1)->isNotEmpty();
                 $items = $order->items->map(fn($i) => [
-                        'item_name' => $i->item_name,
-                        'quantity'  => $i->quantity,
-                        'notes'     => $i->notes,
-                        'is_new'    => (int) $i->is_new,
-                    ]);
-    
+                    'item_name' => $i->item_name,
+                    'quantity' => $i->quantity,
+                    'notes' => $i->notes,
+                    'is_new' => (int) $i->is_new,
+                    'is_deal' => (bool) ($i->menuItem?->is_deal),
+                    'deal_constituents' => ($i->menuItem && $i->menuItem->is_deal) ? $i->menuItem->dealItems->map(fn($di) => [
+                        'name' => $di->menuItem->name,
+                        'quantity' => $di->quantity
+                    ])->toArray() : []
+                ]);
+
                 return [
-                    'id'           => $order->id,
+                    'id' => $order->id,
                     'order_number' => $order->order_number,
-                    'order_type'   => $order->order_type,
-                    'status'       => $order->status,
-                    'has_new_items'=> $hasNew,
+                    'order_type' => $order->order_type,
+                    'status' => $order->status,
+                    'has_new_items' => $hasNew,
                     'confirmed_at' => optional($order->confirmed_at)->toIso8601String(),
-                    'table'        => ['name' => optional($order->table)->name ?? 'N/A'],
-                    'items'        => $items,
+                    'table' => ['name' => optional($order->table)->name ?? 'N/A'],
+                    'items' => $items,
                     'delivery_address' => $order->delivery_address,
                 ];
             });
-    
+
         return response()->json($orders);
     }
 

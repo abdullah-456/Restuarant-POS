@@ -17,11 +17,27 @@ class MenuItem extends Model
         'price',
         'image',
         'is_active',
+        'is_deal',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_deal' => 'boolean',
     ];
 
     public function category(): BelongsTo
-{
-    return $this->belongsTo(Category::class, 'category_id');
-}
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function dealItems()
+    {
+        return $this->hasMany(DealItem::class, 'deal_id');
+    }
+
+    public function items()
+    {
+        return $this->belongsToMany(MenuItem::class, 'deal_items', 'deal_id', 'menu_item_id')->withPivot('quantity');
+    }
 }
 
